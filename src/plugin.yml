@@ -1,0 +1,6 @@
+name: NiftyBungee
+version: 1.0
+website: http://netcoding.net/
+author: Brian Graham
+
+main: net.netcoding.niftybungee.NiftyBungee

@@ -1,8 +1,7 @@
 package net.netcoding.niftybungee;
 
 import net.md_5.bungee.api.plugin.Plugin;
-import net.netcoding.niftybungee.pluginmessages.PluginMessageListener;
-import net.netcoding.niftybungee.sockets.SocketListener;
+import net.netcoding.niftybungee.pluginmessages.BungeeHelper;
 
 public class NiftyBungee extends Plugin {
 
@@ -12,12 +11,8 @@ public class NiftyBungee extends Plugin {
 	public void onEnable() {
 		instance = this;
 
-		try {
-			new SocketListener().start();
-		} catch (Exception ignored) { }
-
 		this.getProxy().registerChannel("NiftyBungee");
-		this.getProxy().getPluginManager().registerListener(this, new PluginMessageListener());
+		this.getProxy().getPluginManager().registerListener(this, new BungeeHelper());
 	}
 
 	public static NiftyBungee getInstance() {

@@ -1,4 +1,4 @@
-package net.netcoding.niftybungee.pluginmessages;
+package net.netcoding.niftybungee.minecraft;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;

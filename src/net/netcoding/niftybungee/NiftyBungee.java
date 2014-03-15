@@ -1,7 +1,7 @@
 package net.netcoding.niftybungee;
 
 import net.md_5.bungee.api.plugin.Plugin;
-import net.netcoding.niftybungee.pluginmessages.BungeeHelper;
+import net.netcoding.niftybungee.minecraft.BungeeHelper;
 
 public class NiftyBungee extends Plugin {
 

@@ -1,50 +1,40 @@
 package net.netcoding.niftybungee.minecraft;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.event.PluginMessageEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.netcoding.niftybungee.NiftyBungee;
 
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+
 public class BungeeHelper implements Listener {
 
 	@EventHandler
 	public void onPluginMessage(PluginMessageEvent event) {
-		if (event.getTag().equals("NiftyBungee") && event.getSender() instanceof Server) {
-			ByteArrayDataInput input = ByteStreams.newDataInput(event.getData());
-			String subChannel = input.readUTF();
-			String data = input.readUTF();
-			Object[] message = null;
+		if (!(event.getTag().equals("NiftyBungee") && event.getSender() instanceof Server)) return;
 
-			if (subChannel.equals("PlayerIP")) {
-				ProxiedPlayer player = NiftyBungee.getInstance().getProxy().getPlayer(data);
+		ByteArrayDataInput input = ByteStreams.newDataInput(event.getData());
+		String subChannel = input.readUTF();
+		ServerInfo server = NiftyBungee.getInstance().getProxy().getServerInfo(input.readUTF());
+		List<Object> objs = new ArrayList<>();
+		objs.add(subChannel);
+		objs.add(server.getName());
 
-				if (player != null)
-					message = new Object[] { player.getAddress().getAddress().getHostAddress(), player.getAddress().getPort() };
-			} else {
-				ServerInfo server = NiftyBungee.getInstance().getProxy().getServerInfo(data);
-
-				if (server != null) {
-					if (subChannel.equals("ServerIP"))
-						message = new Object[] { server.getAddress().getAddress().getHostAddress(), server.getAddress().getPort() };
-					else if (subChannel.equals("ServerMotd"))
-						message = new Object[] { server.getMotd() };
-				}
-			}
-
-
-			if (message != null)
-				sendPluginMessage(event, message);
+		if (subChannel.equals("ServerAddress")) {
+			objs.add(server.getAddress().getAddress().getHostAddress());
+			objs.add(server.getAddress().getPort());
+			sendPluginMessage(event, objs);
 		}
 	}
 
-	public void sendPluginMessage(PluginMessageEvent event, Object... objs) {
+	private void sendPluginMessage(PluginMessageEvent event, List<Object> objs) {
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 
 		for (Object obj : objs) {

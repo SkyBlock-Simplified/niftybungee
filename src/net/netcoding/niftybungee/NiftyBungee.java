@@ -5,18 +5,17 @@ import net.netcoding.niftybungee.minecraft.BungeeHelper;
 
 public class NiftyBungee extends Plugin {
 
-	private static transient NiftyBungee instance;
+	private static transient NiftyBungee plugin;
 
 	@Override
 	public void onEnable() {
-		instance = this;
-
+		plugin = this;
 		this.getProxy().registerChannel("NiftyBungee");
 		this.getProxy().getPluginManager().registerListener(this, new BungeeHelper());
 	}
 
-	public static NiftyBungee getInstance() {
-		return instance;
+	public static NiftyBungee getPlugin() {
+		return plugin;
 	}
 
 }

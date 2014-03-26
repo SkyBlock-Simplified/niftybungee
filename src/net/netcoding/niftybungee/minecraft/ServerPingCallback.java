@@ -31,7 +31,7 @@ public class ServerPingCallback implements Callback<ServerPing> {
 			objs.add(result.getVersion().getName());
 			objs.add(result.getVersion().getProtocol());
 			objs.add(result.getPlayers().getMax());
-			objs.add(result.getPlayers().getOnline());
+			objs.add(result.getPlayers().getSample().length);
 
 			if (result.getPlayers() != null) {
 				if (result.getPlayers().getSample() != null) {

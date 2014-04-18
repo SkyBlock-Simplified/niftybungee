@@ -1,9 +1,7 @@
 package net.netcoding.niftybungee.minecraft;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
@@ -19,12 +17,6 @@ public class BungeeHelper implements Listener {
 
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
-	private static final Map<String, Boolean> serverStatus = new HashMap<>();
-
-	static {
-		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values())
-			serverStatus.put(serverInfo.getName(), false);
-	}
 
 	private void sendServerInfo(ServerInfo sendThis, ServerInfo toHere) {
 		sendThis.ping(new ServerPingCallback(sendThis, toHere));
@@ -34,7 +26,7 @@ public class BungeeHelper implements Listener {
 	public void onServerConnected(ServerConnectedEvent event) {
 		final ServerInfo currentServer = event.getServer().getInfo();
 
-		if (!serverStatus.get(currentServer.getName())) {
+		if (currentServer.getPlayers().size() == 0) {
 			List<Object> servers = new ArrayList<>();
 			servers.add("GetServers");
 			servers.add(NiftyBungee.getPlugin().getProxy().getServers().size());
@@ -51,11 +43,9 @@ public class BungeeHelper implements Listener {
 				this.sendServerInfo(serverInfo, currentServer);
 		}
 
-		serverStatus.put(currentServer.getName(), true);
-
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-			if (!serverStatus.get(serverInfo.getName()) || serverInfo.getPlayers().size() == 0) continue;
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", currentServer.getName(), event.getPlayer().getName()));
+			if (serverInfo.getPlayers().size() == 0) continue;
+			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", currentServer.getName(), event.getPlayer().getName(), event.getPlayer().getUniqueId().toString()));
 		}
 	}
 
@@ -64,16 +54,14 @@ public class BungeeHelper implements Listener {
 		final ServerInfo leftServer = event.getTarget();
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-			if (!serverStatus.get(serverInfo.getName()) || serverInfo.getPlayers().size() == 0) continue;
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", leftServer.getName(), event.getPlayer().getName()));
+			if (serverInfo.getPlayers().size() == 0) continue;
+			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", leftServer.getName(), event.getPlayer().getUniqueId().toString()));
 		}
 
-		if (serverStatus.get(leftServer.getName())) {
+		if (leftServer.getPlayers().size() <= 1) {
 			leftServer.ping(new Callback<ServerPing>() {
 				@Override
 				public void done(ServerPing result, Throwable error) {
-					serverStatus.put(leftServer.getName(), result != null);
-
 					if (result == null) {
 						for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 							if (leftServer.equals(serverInfo)) continue;

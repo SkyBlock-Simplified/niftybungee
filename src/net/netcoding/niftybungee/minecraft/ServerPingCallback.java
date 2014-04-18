@@ -31,12 +31,19 @@ public class ServerPingCallback implements Callback<ServerPing> {
 			objs.add(result.getVersion().getName());
 			objs.add(result.getVersion().getProtocol());
 			objs.add(result.getPlayers().getMax());
-			objs.add(result.getPlayers().getSample().length);
+			boolean hasPlayers = false;
 
 			if (result.getPlayers() != null) {
-				if (result.getPlayers().getSample() != null) {
-					for (PlayerInfo player : result.getPlayers().getSample())
-						objs.add(player.getName());
+				if (result.getPlayers().getSample() != null)
+					hasPlayers = true;
+			}
+
+			objs.add(hasPlayers ? result.getPlayers().getSample().length : 0);
+
+			if (hasPlayers) {
+				for (PlayerInfo player : result.getPlayers().getSample()) {
+					objs.add(player.getName());
+					objs.add(player.getId());
 				}
 			}
 		}

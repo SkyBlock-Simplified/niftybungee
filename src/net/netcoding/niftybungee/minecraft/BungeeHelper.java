@@ -64,7 +64,7 @@ public class BungeeHelper implements Listener {
 				public void done(ServerPing result, Throwable error) {
 					if (result == null) {
 						for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-							if (leftServer.equals(serverInfo)) continue;
+							if (leftServer.equals(serverInfo) && serverInfo.getPlayers().size() > 0) continue;
 							serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("ServerOffline", leftServer.getName()));
 						}
 					}

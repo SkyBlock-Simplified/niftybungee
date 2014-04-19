@@ -33,7 +33,7 @@ public class BungeeHelper implements Listener {
 
 			for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 				servers.add(serverInfo.getName());
-				servers.add(serverInfo.getAddress().getAddress().getHostAddress());
+				servers.add(serverInfo.getAddress().getHostString());
 				servers.add(serverInfo.getAddress().getPort());
 			}
 

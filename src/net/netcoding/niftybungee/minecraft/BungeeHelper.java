@@ -6,8 +6,8 @@ import java.util.List;
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.api.event.ServerDisconnectEvent;
+import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.netcoding.niftybungee.NiftyBungee;
@@ -23,10 +23,10 @@ public class BungeeHelper implements Listener {
 	}
 
 	@EventHandler
-	public void onServerConnected(ServerConnectedEvent event) {
-		final ServerInfo currentServer = event.getServer().getInfo();
+	public void onServerSwitch(ServerSwitchEvent event) {
+		final ServerInfo currentServer = event.getPlayer().getServer().getInfo();
 
-		if (currentServer.getPlayers().size() == 0) {
+		if (currentServer.getPlayers().size() == 1) {
 			List<Object> servers = new ArrayList<>();
 			servers.add("GetServers");
 			servers.add(NiftyBungee.getPlugin().getProxy().getServers().size());
@@ -44,7 +44,7 @@ public class BungeeHelper implements Listener {
 		}
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-			if (serverInfo.getPlayers().size() == 0) continue;
+			if (serverInfo.getPlayers().size() == 1) continue;
 			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", currentServer.getName(), event.getPlayer().getName(), event.getPlayer().getUniqueId().toString()));
 		}
 	}

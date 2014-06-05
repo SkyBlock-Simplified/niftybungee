@@ -25,6 +25,7 @@ public class BungeeHelper implements Listener {
 	@EventHandler
 	public void onServerSwitch(ServerSwitchEvent event) {
 		final ServerInfo currentServer = event.getPlayer().getServer().getInfo();
+		System.out.println(event.getPlayer().getName() + " : switched : " + currentServer.getPlayers().size());
 
 		if (currentServer.getPlayers().size() == 1) {
 			List<Object> servers = new ArrayList<>();
@@ -44,7 +45,7 @@ public class BungeeHelper implements Listener {
 		}
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-			if (serverInfo.getPlayers().size() == 1) continue;
+			if (serverInfo.getPlayers().size() == 0) continue;
 			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", currentServer.getName(), event.getPlayer().getName(), event.getPlayer().getUniqueId().toString()));
 		}
 	}
@@ -52,19 +53,20 @@ public class BungeeHelper implements Listener {
 	@EventHandler
 	public void onServerDisconnect(ServerDisconnectEvent event) {
 		final ServerInfo leftServer = event.getTarget();
+		System.out.println(event.getPlayer().getName() + " : left : " + leftServer.getPlayers().size());
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 			if (serverInfo.getPlayers().size() == 0) continue;
 			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", leftServer.getName(), event.getPlayer().getUniqueId().toString()));
 		}
 
-		if (leftServer.getPlayers().size() <= 1) {
+		if (leftServer.getPlayers().size() == 0) {
 			leftServer.ping(new Callback<ServerPing>() {
 				@Override
 				public void done(ServerPing result, Throwable error) {
 					if (result == null) {
 						for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-							if (leftServer.equals(serverInfo) && serverInfo.getPlayers().size() > 0) continue;
+							if (leftServer.equals(serverInfo) || serverInfo.getPlayers().size() == 0) continue;
 							serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("ServerOffline", leftServer.getName()));
 						}
 					}

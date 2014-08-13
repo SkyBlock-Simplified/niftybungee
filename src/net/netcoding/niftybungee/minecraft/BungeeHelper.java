@@ -25,7 +25,6 @@ public class BungeeHelper implements Listener {
 	@EventHandler
 	public void onServerSwitch(ServerSwitchEvent event) {
 		final ServerInfo currentServer = event.getPlayer().getServer().getInfo();
-		System.out.println(event.getPlayer().getName() + " : switched : " + currentServer.getPlayers().size());
 
 		if (currentServer.getPlayers().size() == 1) {
 			List<Object> servers = new ArrayList<>();
@@ -53,7 +52,6 @@ public class BungeeHelper implements Listener {
 	@EventHandler
 	public void onServerDisconnect(ServerDisconnectEvent event) {
 		final ServerInfo leftServer = event.getTarget();
-		System.out.println(event.getPlayer().getName() + " : left : " + leftServer.getPlayers().size());
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 			if (serverInfo.getPlayers().size() == 0) continue;

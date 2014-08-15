@@ -22,6 +22,11 @@ public class BungeeHelper implements Listener {
 		sendThis.ping(new ServerPingCallback(sendThis, toHere));
 	}
 
+	/**
+	 * When a user joins or switches servers, if the joining server had 0 players
+	 * then notify said server of all bungee servers to cache with, and send out
+	 * a PlayerJoin event to all servers that have more than 0 players.
+	 */
 	@EventHandler
 	public void onServerSwitch(ServerSwitchEvent event) {
 		final ServerInfo currentServer = event.getPlayer().getServer().getInfo();
@@ -49,6 +54,11 @@ public class BungeeHelper implements Listener {
 		}
 	}
 
+	/**
+	 * When a user leaves the network, send all servers with more than 0 players
+	 * a PlayerLeave event, and if the left server now has 0 players, notify all
+	 * other servers with more than 0 players to reset the cached server info.
+	 */
 	@EventHandler
 	public void onServerDisconnect(ServerDisconnectEvent event) {
 		final ServerInfo leftServer = event.getTarget();

@@ -19,6 +19,10 @@ public class ServerPingCallback implements Callback<ServerPing> {
 		this.target = target;
 	}
 
+	/**
+	 * When a ping on a server is completed, send the resulting
+	 * information to the requesting server.
+	 */
 	@Override
 	public void done(ServerPing result, Throwable error) {
 		List<Object> objs = new ArrayList<>();

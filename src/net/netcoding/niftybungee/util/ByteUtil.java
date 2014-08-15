@@ -8,7 +8,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
 /**
- * Byte Array Conversion Utility
+ * A collection of byte array methods for easy object converting.
  */
 public class ByteUtil {
 

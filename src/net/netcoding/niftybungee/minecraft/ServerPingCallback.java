@@ -5,18 +5,20 @@ import java.util.List;
 
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
-import net.md_5.bungee.api.ServerPing.PlayerInfo;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.netcoding.niftybungee.util.ByteUtil;
 
 public class ServerPingCallback implements Callback<ServerPing> {
 
 	private final ServerInfo source;
 	private final ServerInfo target;
+	private final boolean updatePlayers;
 
-	public ServerPingCallback(ServerInfo source, ServerInfo target) {
+	public ServerPingCallback(ServerInfo source, ServerInfo target, boolean updatePlayers) {
 		this.source = source;
 		this.target = target;
+		this.updatePlayers = updatePlayers;
 	}
 
 	/**
@@ -35,19 +37,14 @@ public class ServerPingCallback implements Callback<ServerPing> {
 			objs.add(result.getVersion().getName());
 			objs.add(result.getVersion().getProtocol());
 			objs.add(result.getPlayers().getMax());
-			boolean hasPlayers = false;
+			objs.add(this.updatePlayers);
 
-			if (result.getPlayers() != null) {
-				if (result.getPlayers().getSample() != null)
-					hasPlayers = true;
-			}
+			if (this.updatePlayers) {
+				objs.add(this.source.getPlayers().size());
 
-			objs.add(hasPlayers ? result.getPlayers().getSample().length : 0);
-
-			if (hasPlayers) {
-				for (PlayerInfo player : result.getPlayers().getSample()) {
+				for (ProxiedPlayer player : this.source.getPlayers()) {
+					objs.add(player.getUniqueId());
 					objs.add(player.getName());
-					objs.add(player.getId());
 				}
 			}
 		}

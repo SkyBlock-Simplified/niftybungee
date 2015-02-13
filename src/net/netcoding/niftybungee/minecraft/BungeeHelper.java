@@ -15,23 +15,36 @@ import net.netcoding.niftybungee.util.ByteUtil;
 
 public class BungeeHelper implements Listener {
 
-	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
 
 	private void sendServerInfo(ServerInfo sendThis, ServerInfo toHere) {
 		sendThis.ping(new ServerPingCallback(sendThis, toHere));
 	}
 
+	private void sendOfflineServer(final ServerInfo offline) {
+		offline.ping(new Callback<ServerPing>() {
+			@Override
+			public void done(ServerPing result, Throwable error) {
+				if (result == null || result.getPlayers().getOnline() == 0) {
+					for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
+						if (serverInfo.equals(offline) || serverInfo.getPlayers().size() == 0) continue;
+						sendServerInfo(offline, serverInfo);
+					}
+				}
+			}
+		});
+	}
+
 	/**
 	 * When a user joins or switches servers, if the joining server had 0 players
 	 * then notify said server of all bungee servers to cache with, and send out
-	 * a PlayerJoin event to all servers that have more than 0 players.
+	 * a PlayerJoin event to all servers.
 	 */
 	@EventHandler
 	public void onServerSwitch(ServerSwitchEvent event) {
-		final ServerInfo currentServer = event.getPlayer().getServer().getInfo();
+		final ServerInfo connected = event.getPlayer().getServer().getInfo();
 
-		if (currentServer.getPlayers().size() == 1) {
+		if (connected.getPlayers().size() == 1) {
 			List<Object> servers = new ArrayList<>();
 			servers.add("GetServers");
 			servers.add(NiftyBungee.getPlugin().getProxy().getServers().size());
@@ -42,15 +55,15 @@ public class BungeeHelper implements Listener {
 				servers.add(serverInfo.getAddress().getPort());
 			}
 
-			currentServer.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray(servers));
+			connected.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray(servers));
 
 			for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values())
-				this.sendServerInfo(serverInfo, currentServer);
+				this.sendServerInfo(serverInfo, connected);
 		}
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 			if (serverInfo.getPlayers().size() == 0) continue;
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", currentServer.getName(), event.getPlayer().getName(), event.getPlayer().getUniqueId().toString()));
+			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", connected.getName(), event.getPlayer().getUniqueId(), event.getPlayer().getName()));
 		}
 	}
 
@@ -61,25 +74,13 @@ public class BungeeHelper implements Listener {
 	 */
 	@EventHandler
 	public void onServerDisconnect(ServerDisconnectEvent event) {
-		final ServerInfo leftServer = event.getTarget();
+		final ServerInfo disconnect = event.getTarget();
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-			if (serverInfo.getPlayers().size() == 0) continue;
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", leftServer.getName(), event.getPlayer().getUniqueId().toString()));
-		}
-
-		if (leftServer.getPlayers().size() == 0) {
-			leftServer.ping(new Callback<ServerPing>() {
-				@Override
-				public void done(ServerPing result, Throwable error) {
-					if (result == null) {
-						for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-							if (leftServer.equals(serverInfo) || serverInfo.getPlayers().size() == 0) continue;
-							serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("ServerOffline", leftServer.getName()));
-						}
-					}
-				}
-			});
+			if (serverInfo.getPlayers().size() == 0)
+				this.sendOfflineServer(serverInfo);
+			else
+				serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", disconnect.getName(), event.getPlayer().getUniqueId()));
 		}
 	}
 

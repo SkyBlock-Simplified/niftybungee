@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ProxyReloadEvent;
 import net.md_5.bungee.api.event.ServerDisconnectEvent;
 import net.md_5.bungee.api.event.ServerSwitchEvent;
@@ -101,7 +102,8 @@ public class BungeeHelper implements Listener {
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 			if (serverInfo.getPlayers().size() == 0) continue;
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", connected.getName(), event.getPlayer().getUniqueId(), event.getPlayer().getName()));
+			ProxiedPlayer player = event.getPlayer();
+			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", connected.getName(), player.getUniqueId(), player.getName(), player.getAddress().getHostString(), player.getAddress().getPort()));
 		}
 	}
 

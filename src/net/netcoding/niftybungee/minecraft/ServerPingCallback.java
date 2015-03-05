@@ -45,6 +45,8 @@ public class ServerPingCallback implements Callback<ServerPing> {
 				for (ProxiedPlayer player : this.source.getPlayers()) {
 					objs.add(player.getUniqueId());
 					objs.add(player.getName());
+					objs.add(player.getAddress().getHostString());
+					objs.add(player.getAddress().getPort());
 				}
 			}
 		}

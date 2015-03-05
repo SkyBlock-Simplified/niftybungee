@@ -8,7 +8,6 @@ import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.netcoding.niftybungee.util.ByteUtil;
-import net.netcoding.niftybungee.util.StringUtil;
 
 public class ServerPingCallback implements Callback<ServerPing> {
 
@@ -44,7 +43,7 @@ public class ServerPingCallback implements Callback<ServerPing> {
 				objs.add(this.source.getPlayers().size());
 
 				for (ProxiedPlayer player : this.source.getPlayers())
-					objs.add(StringUtil.format("{0},{1},{2},{3}", player.getUniqueId().toString(), player.getName(), player.getAddress().getHostString(), String.valueOf(player.getAddress().getPort())));
+					objs.add(BungeeHelper.getPlayerInfo(player));
 			}
 		}
 

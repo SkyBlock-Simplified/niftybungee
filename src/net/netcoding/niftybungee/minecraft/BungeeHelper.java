@@ -16,6 +16,7 @@ import net.md_5.bungee.api.scheduler.ScheduledTask;
 import net.md_5.bungee.event.EventHandler;
 import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftybungee.util.ByteUtil;
+import net.netcoding.niftybungee.util.StringUtil;
 
 public class BungeeHelper implements Listener {
 
@@ -36,6 +37,10 @@ public class BungeeHelper implements Listener {
 	}
 
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
+
+	public static String getPlayerInfo(ProxiedPlayer player) {
+		return StringUtil.format("{0},{1},{2},{3}", player.getUniqueId().toString(), player.getName(), player.getAddress().getHostString(), String.valueOf(player.getAddress().getPort()));
+	}
 
 	private static void sendServerInfo(ServerInfo sendThis, ServerInfo toHere, boolean updatePlayers) {
 		sendThis.ping(new ServerPingCallback(sendThis, toHere, updatePlayers));
@@ -102,8 +107,7 @@ public class BungeeHelper implements Listener {
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
 			if (serverInfo.getPlayers().size() == 0) continue;
-			ProxiedPlayer player = event.getPlayer();
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", connected.getName(), player.getUniqueId(), player.getName(), player.getAddress().getHostString(), player.getAddress().getPort()));
+			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", connected.getName(), getPlayerInfo(event.getPlayer())));
 		}
 	}
 

@@ -40,7 +40,7 @@ public class ServerPingCallback implements Callback<ServerPing> {
 			objs.add(this.updatePlayers);
 
 			if (this.updatePlayers) {
-				objs.add(this.source.getPlayers().size() * 2);
+				objs.add(this.source.getPlayers().size() * 4);
 
 				for (ProxiedPlayer player : this.source.getPlayers()) {
 					objs.add(player.getUniqueId());

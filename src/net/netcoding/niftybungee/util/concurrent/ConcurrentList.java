@@ -1,4 +1,4 @@
-package net.netcoding.niftybukkit.util.concurrent;
+package net.netcoding.niftybungee.util.concurrent;
 
 import java.util.ArrayList;
 import java.util.Collection;

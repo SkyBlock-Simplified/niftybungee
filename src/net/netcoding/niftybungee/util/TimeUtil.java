@@ -37,14 +37,10 @@ public class TimeUtil {
 	 */
 	public static long getClockTime(String time) {
 		Integer clock = times.get(time);
-
-		if (clock != null)
-			return clock;
-		else {
-			clock = NumberUtil.isInt(time) ? Integer.valueOf(time) : -1;
-			if (clock == -1) throw new NumberFormatException(StringUtil.format("The provided time value {0} is neither a clock time or number!", clock));
-			return Math.abs(clock);
-		}
+		if (clock != null) return clock;
+		clock = NumberUtil.isInt(time) ? Integer.valueOf(time) : -1;
+		if (clock == -1) throw new NumberFormatException(StringUtil.format("The provided time value {0} is neither a clock time or number!", clock));
+		return Math.abs(clock);
 	}
 
 	/**

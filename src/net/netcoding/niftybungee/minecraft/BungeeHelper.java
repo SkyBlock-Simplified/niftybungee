@@ -140,7 +140,7 @@ public class BungeeHelper implements Listener {
 
 						if (changeDetected) {
 							for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-								if (serverInfo.equals(testThis)) continue;
+								if (serverInfo.equals(testThis) && !playerUpdate) continue;
 								sendServerInfo(testThis, serverInfo, playerUpdate);
 							}
 						}

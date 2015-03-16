@@ -18,7 +18,6 @@ public class NiftyBungee extends Plugin {
 	@Override
 	public void onDisable() {
 		this.getProxy().unregisterChannel("NiftyBungee");
-		BungeeHelper.stopThread();
 		this.getProxy().getPluginManager().unregisterListener(listener);
 		listener = null;
 		

@@ -25,6 +25,7 @@ public class NiftyBungee extends Plugin {
 	public void onDisable() {
 		this.getProxy().unregisterChannel(BungeeHelper.NIFTY_CHANNEL);
 		this.getProxy().getPluginManager().unregisterListener(listener);
+		listener.stopThread();
 		listener = null;
 	}
 

@@ -2,8 +2,12 @@ package net.netcoding.niftybungee.minecraft;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ProxyReloadEvent;
@@ -14,12 +18,19 @@ import net.md_5.bungee.event.EventHandler;
 import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftybungee.util.ByteUtil;
 import net.netcoding.niftybungee.util.StringUtil;
+import net.netcoding.niftybungee.util.concurrent.ConcurrentList;
 
 public class BungeeHelper implements Listener {
 
+	private static final ConcurrentHashMap<String, Boolean> CACHE = new ConcurrentHashMap<>();
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
 	private List<String> sentBungeeInfo = new ArrayList<>();
+	private int taskId = -1;
+
+	public BungeeHelper() {
+		runThread();
+	}
 
 	/**
 	 * When the proxy gets reloaded, resend the list of servers and information.
@@ -73,6 +84,11 @@ public class BungeeHelper implements Listener {
 		return StringUtil.format("{0},{1},{2},{3}", player.getUniqueId().toString(), player.getName(), player.getAddress().getHostString(), String.valueOf(player.getAddress().getPort()));
 	}
 
+	private void runThread() {
+		if (this.taskId == -2) return;
+		this.taskId = NiftyBungee.getPlugin().getProxy().getScheduler().schedule(NiftyBungee.getPlugin(), new NotifyServers(), 400L, TimeUnit.MILLISECONDS).getId();
+	}
+
 	private static void sendServerInfo(ServerInfo sendThis, ServerInfo toHere, boolean updatePlayers) {
 		sendThis.ping(new ServerPingCallback(sendThis, toHere, updatePlayers));
 	}
@@ -92,6 +108,55 @@ public class BungeeHelper implements Listener {
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values())
 			sendServerInfo(serverInfo, toHere, true);
+	}
+
+	public void stopThread() {
+		if (this.taskId > 0) {
+			NiftyBungee.getPlugin().getProxy().getScheduler().cancel(this.taskId);
+			this.taskId = -2;
+		}
+	}
+
+	private class NotifyServers implements Runnable {
+
+		@Override
+		public void run() {
+			ConcurrentList<ServerInfo> servers = new ConcurrentList<ServerInfo>(NiftyBungee.getPlugin().getProxy().getServers().values());
+
+			for (final ServerInfo testThis : servers) {
+				testThis.ping(new Callback<ServerPing>() {
+					@Override
+					public void done(ServerPing result, Throwable error) {
+						boolean changeDetected = false;
+						boolean playerUpdate = false;
+
+						if (result == null || result.getPlayers().getOnline() == 0) {
+							if (!CACHE.containsKey(testThis.getName()) || CACHE.get(testThis.getName())) {
+								CACHE.put(testThis.getName(), false);
+								changeDetected = true;
+								playerUpdate = false;
+							}
+						} else {
+							if (!CACHE.containsKey(testThis.getName()) || !CACHE.get(testThis.getName())) {
+								CACHE.put(testThis.getName(), true);
+								changeDetected = true;
+								playerUpdate = true;
+							}
+						}
+
+						if (changeDetected) {
+							for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
+								if (serverInfo.equals(testThis)) continue;
+								sendServerInfo(testThis, serverInfo, playerUpdate);
+							}
+						}
+					}
+				});
+			}
+
+			runThread();
+		}
+
 	}
 
 }

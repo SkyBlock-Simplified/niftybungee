@@ -39,6 +39,7 @@ public class BungeeHelper implements Listener {
 	@EventHandler
 	public void onProxyReload(ProxyReloadEvent event) {
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
+			if (serverInfo.getPlayers().size() == 0) continue;
 			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("BungeeInfo", ProxyServer.getInstance().getConfig().isOnlineMode()));
 			sendServerList(serverInfo);
 		}
@@ -63,8 +64,10 @@ public class BungeeHelper implements Listener {
 			sendServerList(connected);
 		}
 
-		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values())
+		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
+			if (serverInfo.getPlayers().size() == 0) continue;
 			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", connected.getName(), parsePlayerInfo(event.getPlayer())));
+		}
 	}
 
 	/**
@@ -76,8 +79,12 @@ public class BungeeHelper implements Listener {
 	public void onServerDisconnect(ServerDisconnectEvent event) {
 		final ServerInfo disconnect = event.getTarget();
 
-		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values())
-			serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", disconnect.getName(), event.getPlayer().getUniqueId()));
+		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
+			if (serverInfo.getPlayers().size() == 0)
+				sendServerUpdate(serverInfo);
+			else
+				serverInfo.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", disconnect.getName(), event.getPlayer().getUniqueId()));
+		}
 	}
 
 	public static String parsePlayerInfo(ProxiedPlayer player) {
@@ -110,6 +117,37 @@ public class BungeeHelper implements Listener {
 			sendServerInfo(serverInfo, toHere, true);
 	}
 
+	public static void sendServerUpdate(final ServerInfo offline) {
+		offline.ping(new Callback<ServerPing>() {
+			@Override
+			public void done(ServerPing result, Throwable error) {
+				boolean changeDetected = false;
+				boolean playerUpdate = false;
+
+				if (result == null || result.getPlayers().getOnline() == 0) {
+					if (!CACHE.containsKey(offline.getName()) || CACHE.get(offline.getName())) {
+						CACHE.put(offline.getName(), false);
+						changeDetected = true;
+						playerUpdate = false;
+					}
+				} else {
+					if (!CACHE.containsKey(offline.getName()) || !CACHE.get(offline.getName())) {
+						CACHE.put(offline.getName(), true);
+						changeDetected = true;
+						playerUpdate = true;
+					}
+				}
+
+				if (changeDetected) {
+					for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
+						if (serverInfo.equals(offline) || serverInfo.getPlayers().size() == 0) continue;
+						sendServerInfo(offline, serverInfo, playerUpdate);
+					}
+				}
+			}
+		});
+	}
+
 	public void stopThread() {
 		if (this.taskId > 0) {
 			NiftyBungee.getPlugin().getProxy().getScheduler().cancel(this.taskId);
@@ -122,38 +160,7 @@ public class BungeeHelper implements Listener {
 		@Override
 		public void run() {
 			ConcurrentList<ServerInfo> servers = new ConcurrentList<ServerInfo>(NiftyBungee.getPlugin().getProxy().getServers().values());
-
-			for (final ServerInfo testThis : servers) {
-				testThis.ping(new Callback<ServerPing>() {
-					@Override
-					public void done(ServerPing result, Throwable error) {
-						boolean changeDetected = false;
-						boolean playerUpdate = false;
-
-						if (result == null || result.getPlayers().getOnline() == 0) {
-							if (!CACHE.containsKey(testThis.getName()) || CACHE.get(testThis.getName())) {
-								CACHE.put(testThis.getName(), false);
-								changeDetected = true;
-								playerUpdate = false;
-							}
-						} else {
-							if (!CACHE.containsKey(testThis.getName()) || !CACHE.get(testThis.getName())) {
-								CACHE.put(testThis.getName(), true);
-								changeDetected = true;
-								playerUpdate = true;
-							}
-						}
-
-						if (changeDetected) {
-							for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-								if (serverInfo.equals(testThis)) continue;
-								sendServerInfo(testThis, serverInfo, playerUpdate);
-							}
-						}
-					}
-				});
-			}
-
+			for (final ServerInfo testThis : servers) sendServerUpdate(testThis);
 			runThread();
 		}
 

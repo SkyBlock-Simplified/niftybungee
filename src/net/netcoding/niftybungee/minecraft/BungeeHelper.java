@@ -25,7 +25,6 @@ public class BungeeHelper implements Listener {
 	private static final ConcurrentHashMap<String, Boolean> CACHE = new ConcurrentHashMap<>();
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
-	private List<String> sentBungeeInfo = new ArrayList<>();
 	private int taskId = -1;
 
 	public BungeeHelper() {
@@ -56,11 +55,7 @@ public class BungeeHelper implements Listener {
 		final ServerInfo connected = event.getPlayer().getServer().getInfo();
 
 		if (connected.getPlayers().size() == 1) {
-			if (!sentBungeeInfo.contains(connected.getName())) {
-				sentBungeeInfo.add(connected.getName());
-				connected.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("BungeeInfo", ProxyServer.getInstance().getConfig().isOnlineMode()));
-			}
-
+			connected.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray("BungeeInfo", ProxyServer.getInstance().getConfig().isOnlineMode()));
 			sendServerList(connected);
 		}
 

@@ -43,7 +43,7 @@ public class ServerPingCallback implements Callback<ServerPing> {
 				objs.add(this.source.getPlayers().size());
 
 				for (ProxiedPlayer player : this.source.getPlayers())
-					objs.add(BungeeHelper.parsePlayerInfo(player));
+					objs.add(BungeeHelper.parsePlayerInfo(player, true));
 			}
 		}
 

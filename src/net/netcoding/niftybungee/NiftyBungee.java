@@ -12,7 +12,7 @@ import net.netcoding.niftybungee.minecraft.BungeeHelper;
 public class NiftyBungee extends Plugin {
 
 	private static transient NiftyBungee plugin;
-	private static transient BungeeHelper listener;
+	private transient BungeeHelper listener;
 
 	static {
 		System.setOut(new SystemInterceptor());
@@ -24,15 +24,15 @@ public class NiftyBungee extends Plugin {
 		ProxyServer.getInstance().getLogger().addHandler(new LogHandler());
 		BungeeCord.getInstance().getLogger().addHandler(new LogHandler());
 		this.getProxy().registerChannel(BungeeHelper.NIFTY_CHANNEL);
-		this.getProxy().getPluginManager().registerListener(this, listener = new BungeeHelper());
+		this.getProxy().getPluginManager().registerListener(this, this.listener = new BungeeHelper());
 	}
 
 	@Override
 	public void onDisable() {
 		this.getProxy().unregisterChannel(BungeeHelper.NIFTY_CHANNEL);
-		this.getProxy().getPluginManager().unregisterListener(listener);
-		listener.stopThread();
-		listener = null;
+		this.getProxy().getPluginManager().unregisterListener(this.listener);
+		this.listener.stopThread();
+		this.listener = null;
 	}
 
 	public static NiftyBungee getPlugin() {

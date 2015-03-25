@@ -1,9 +1,5 @@
 package net.netcoding.niftybungee.util;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -17,21 +13,6 @@ import com.google.common.io.ByteStreams;
 public class ByteUtil {
 
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
-	private static final Charset UTF8 = Charset.forName("UTF-8");
-
-	public static int readVarInt(DataInputStream in) throws IOException {
-		int i = 0;
-		int j = 0;
-
-		while (true) {
-			int k = in.readByte();
-			i |= (k & 0x7F) << j++ * 7;
-			if (j > 5) throw new RuntimeException("VarInt too big");
-			if ((k & 0x80) != 128) break;
-		}
-
-		return i;
-	}
 
 	/**
 	 * Gets a byte array of converted objects.
@@ -114,22 +95,5 @@ public class ByteUtil {
 
 		return output.toString();
 	}
-
-	public static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {
-		while (true) {
-			if ((paramInt & 0xFFFFFF80) == 0) {
-				out.writeByte(paramInt);
-				return;
-			}
-
-			out.writeByte(paramInt & 0x7F | 0x80);
-			paramInt >>>= 7;
-		}
-	}
-
-    public static void writeString(DataOutputStream out, String string) throws IOException {
-        writeVarInt(out, string.length());
-        out.write(string.getBytes(UTF8));
-    }
 
 }

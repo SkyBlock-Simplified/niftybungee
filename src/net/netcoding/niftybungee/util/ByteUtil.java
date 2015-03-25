@@ -1,7 +1,7 @@
 package net.netcoding.niftybungee.util;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 
 import com.google.common.io.ByteArrayDataOutput;
@@ -30,7 +30,7 @@ public class ByteUtil {
 	 * @param data to convert
 	 * @return converted objects in byte array
 	 */
-	public static byte[] toByteArray(List<Object> data) {
+	public static byte[] toByteArray(Collection<Object> data) {
 		ByteArrayDataOutput output = ByteStreams.newDataOutput();
 
 		for (Object obj : data) {

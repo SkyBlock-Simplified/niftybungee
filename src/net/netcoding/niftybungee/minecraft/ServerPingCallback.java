@@ -1,23 +1,20 @@
 package net.netcoding.niftybungee.minecraft;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import net.md_5.bungee.api.Callback;
-import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.netcoding.niftybungee.util.ByteUtil;
 
-public class ServerPingCallback implements Callback<ServerPing> {
+public class ServerPingCallback implements ServerPingListener {
 
-	private final ServerInfo source;
-	private final ServerInfo target;
+	private final Collection<ServerInfo> targets;
 	private final boolean updatePlayers;
 
-	public ServerPingCallback(ServerInfo source, ServerInfo target, boolean updatePlayers) {
-		this.source = source;
-		this.target = target;
+	public ServerPingCallback(Collection<ServerInfo> targets, boolean updatePlayers) {
+		this.targets = targets;
 		this.updatePlayers = updatePlayers;
 	}
 
@@ -26,28 +23,29 @@ public class ServerPingCallback implements Callback<ServerPing> {
 	 * information to the requesting server.
 	 */
 	@Override
-	public void done(ServerPing result, Throwable error) {
+	public void onServerPing(MinecraftServer server) {
 		List<Object> objs = new ArrayList<>();
 		objs.add("ServerInfo");
-		objs.add(this.source.getName());
-		objs.add(result != null);
+		objs.add(server.getName());
+		objs.add(server.isOnline());
 
-		if (result != null) {
-			objs.add(result.getDescription());
-			objs.add(result.getVersion().getName());
-			objs.add(result.getVersion().getProtocol());
-			objs.add(result.getPlayers().getMax());
+		if (server.isOnline()) {
+			objs.add(server.getMotd());
+			objs.add(server.getGameVersion());
+			objs.add(server.getProtocolVersion());
+			objs.add(server.getMaxPlayers());
 			objs.add(this.updatePlayers);
 
 			if (this.updatePlayers) {
-				objs.add(this.source.getPlayers().size());
+				objs.add(server.getPlayerList().size());
 
-				for (ProxiedPlayer player : this.source.getPlayers())
+				for (ProxiedPlayer player : server.getPlayerList())
 					objs.add(BungeeHelper.parsePlayerInfo(player, true));
 			}
 		}
 
-		this.target.sendData(BungeeHelper.NIFTY_CHANNEL, ByteUtil.toByteArray(objs));
+		for (ServerInfo target : this.targets)
+			target.sendData(BungeeHelper.NIFTY_CHANNEL, ByteUtil.toByteArray(objs));
 	}
 
 }

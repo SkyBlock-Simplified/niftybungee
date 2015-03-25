@@ -1,12 +1,11 @@
 package net.netcoding.niftybungee.minecraft;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
-import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ProxyReloadEvent;
@@ -16,7 +15,6 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftybungee.util.ByteUtil;
-import net.netcoding.niftybungee.util.concurrent.ConcurrentList;
 
 import com.google.gson.JsonObject;
 
@@ -24,7 +22,6 @@ public class BungeeHelper implements Listener {
 
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
-	private static final ConcurrentHashMap<String, Boolean> CACHE = new ConcurrentHashMap<>();
 	private volatile boolean running = false;
 	private volatile int totalServers = 0;
 	private volatile int processedServers = 0;
@@ -108,11 +105,22 @@ public class BungeeHelper implements Listener {
 		return json.toString();
 	}
 
-	private static void sendServerInfo(ServerInfo sendThis, ServerInfo toHere, boolean updatePlayers) {
-		sendThis.ping(new ServerPingCallback(sendThis, toHere, updatePlayers));
+	private void sendServerInfo(ServerInfo sendThis, Collection<ServerInfo> toHere, boolean updatePlayers, final boolean thread) {
+		new BungeeServer(sendThis, new ServerPingCallback(toHere, updatePlayers)).ping(new Runnable() {
+			@Override
+			public void run() {
+				if (thread) {
+					if (++processedServers == totalServers) {
+						processedServers = 0;
+						running = false;
+						startThread();
+					}
+				}
+			}
+		});
 	}
 
-	private static void sendServerList(ServerInfo toHere) {
+	private void sendServerList(ServerInfo toHere) {
 		List<Object> servers = new ArrayList<>();
 		servers.add("GetServers");
 		servers.add(NiftyBungee.getPlugin().getProxy().getServers().size());
@@ -123,59 +131,21 @@ public class BungeeHelper implements Listener {
 		toHere.sendData(NIFTY_CHANNEL, ByteUtil.toByteArray(servers));
 
 		for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values())
-			sendServerInfo(serverInfo, toHere, true);
-	}
-
-	private void sendServerUpdate(final ServerInfo offline) {
-		offline.ping(new Callback<ServerPing>() {
-			@Override
-			public void done(ServerPing result, Throwable error) {
-				boolean changeDetected = false;
-				boolean playerUpdate = true;
-				boolean isOffline = (result == null || result.getPlayers().getOnline() == 0);
-
-				if (isOffline) {
-					if (!CACHE.containsKey(offline.getName()) || CACHE.get(offline.getName())) {
-						CACHE.put(offline.getName(), false);
-						changeDetected = true;
-						playerUpdate = false;
-					}
-				} else {
-					if (!CACHE.containsKey(offline.getName()) || !CACHE.get(offline.getName())) {
-						CACHE.put(offline.getName(), true);
-						changeDetected = true;
-						playerUpdate = true;
-					}
-				}
-
-				if (changeDetected) {
-					for (ServerInfo serverInfo : NiftyBungee.getPlugin().getProxy().getServers().values()) {
-						if ((isOffline && serverInfo.equals(offline)) || serverInfo.getPlayers().size() == 0) continue;
-						sendServerInfo(offline, serverInfo, playerUpdate);
-					}
-				}
-
-				if (++processedServers == totalServers) {
-					processedServers = 0;
-
-					if (running)
-						startThread();
-				}
-			}
-		});
+			sendServerInfo(serverInfo, Arrays.asList(toHere), true, false);
 	}
 
 	private void startThread() {
 		if (!this.running && this.taskId > -2) {
-			this.running = true;
 			this.taskId = NiftyBungee.getPlugin().getProxy().getScheduler().runAsync(NiftyBungee.getPlugin(), new Runnable() {
 				@Override
 				public void run() {
-					ConcurrentList<ServerInfo> servers = new ConcurrentList<>(NiftyBungee.getPlugin().getProxy().getServers().values());
-					totalServers = servers.size();
+					Collection<ServerInfo> servers = NiftyBungee.getPlugin().getProxy().getServers().values();
+					int count = servers.size();
+					totalServers = count;
+					processedServers = 0;
 
-					for (final ServerInfo testThis : servers)
-						sendServerUpdate(testThis);
+					for (ServerInfo sendThis : servers)
+						sendServerInfo(sendThis, servers, true, true);
 				}
 			}).getId();
 		}

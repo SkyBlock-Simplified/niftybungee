@@ -87,7 +87,7 @@ public class BungeeHelper implements Listener {
 	public static String parseServerInfo(ServerInfo info) {
 		JsonObject json = new JsonObject();
 		json.addProperty("name", info.getName());
-		json.addProperty("ip", info.getAddress().getHostString());
+		json.addProperty("ip", info.getAddress().getAddress().getHostAddress());
 		json.addProperty("port", info.getAddress().getPort());
 		return json.toString();
 	}
@@ -98,7 +98,7 @@ public class BungeeHelper implements Listener {
 		json.addProperty("name", player.getName());
 
 		if (address) {
-			json.addProperty("ip", player.getAddress().getHostString());
+			json.addProperty("ip", player.getAddress().getAddress().getHostAddress());
 			json.addProperty("port", player.getAddress().getPort());
 		}
 

@@ -44,20 +44,18 @@ public class BukkitServer extends MinecraftServer {
 
 					try (OutputStream outputStream = socket.getOutputStream()) {
 						try (DataOutputStream dataOutputStream = new DataOutputStream(outputStream)) {
+							DataUtil.writeByteArray(dataOutputStream, prepareHandshake());
+							DataUtil.writeByteArray(dataOutputStream, preparePing());
+
 							try (InputStream inputStream = socket.getInputStream()) {
-								try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream)) {
-									DataUtil.writeByteArray(dataOutputStream, prepareHandshake());
-									DataUtil.writeByteArray(dataOutputStream, preparePing());
+								try (DataInputStream dataInputStream = new DataInputStream(inputStream)) {
+									StatusResponse response = processResponse(dataInputStream);
 
-									try (DataInputStream dataInputStream = new DataInputStream(inputStream)) {
-										StatusResponse response = processResponse(dataInputStream);
-
-										setMotd(response.getMotd());
-										setGameVersion(response.getVersion().getName());
-										setProtocolVersion(response.getVersion().getProtocol());
-										setMaxPlayers(response.getPlayers().getMax());
-										setOnline(true);
-									}
+									setMotd(response.getMotd());
+									setGameVersion(response.getVersion().getName());
+									setProtocolVersion(response.getVersion().getProtocol());
+									setMaxPlayers(response.getPlayers().getMax());
+									setOnline(true);
 								}
 							}
 						}

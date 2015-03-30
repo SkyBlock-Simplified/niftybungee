@@ -13,10 +13,13 @@ public class BungeeServer extends MinecraftServer {
 	public void ping(final Runnable runnable) {
 		if (this.getAddress() == null) return;
 
-		serverInfo.ping(new Callback<ServerPing>() {
+		// https://github.com/SpigotMC/BungeeCord/blob/master/proxy/src/main/java/net/md_5/bungee/connection/InitialHandler.java
+		// https://github.com/SpigotMC/BungeeCord/blob/master/proxy/src/main/java/net/md_5/bungee/BungeeServerInfo.java
+		// https://github.com/SpigotMC/BungeeCord/blob/master/proxy/src/main/java/net/md_5/bungee/connection/PingHandler.java
+		this.serverInfo.ping(new Callback<ServerPing>() {
 			@Override
 			public void done(ServerPing result, Throwable error) {
-				if (error != null) // result == null
+				if (error != null)
 					reset();
 				else {
 					setMotd(result.getDescription());

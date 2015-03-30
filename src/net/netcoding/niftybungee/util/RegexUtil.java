@@ -22,9 +22,6 @@ public class RegexUtil {
 	public static final transient Pattern IP_FILTER_PATTERN = Pattern.compile("(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(?::\\d*)?)");
 	public static final transient Pattern IP_VALIDATE_PATTERN = Pattern.compile("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
-	public static final transient Pattern CONTAIN_NICKNAME_CHARZ = Pattern.compile("([\\w-])");
-	public static final transient Pattern INVALID_NICKNAME_CHARZ = Pattern.compile("([^\\w-])");
-
 	public static String replace(String message, Pattern pattern) {
 		return replace(message, pattern, "$1");
 	}

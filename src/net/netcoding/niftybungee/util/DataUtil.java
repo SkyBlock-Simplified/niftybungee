@@ -5,15 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
 public class DataUtil {
-
-	private static final Charset UTF8 = Charset.forName("UTF-8");
 
 	public static ByteArrayDataInput newDataInput(byte[] data) {
 		return ByteStreams.newDataInput(data);
@@ -79,12 +77,12 @@ public class DataUtil {
 
     public static void writeString(DataOutputStream out, String string) throws IOException {
         writeVarInt(out, string.length());
-        out.write(string.getBytes(UTF8));
+        out.write(string.getBytes(StandardCharsets.UTF_8));
     }
 
     public static void writeString(ByteArrayDataOutput out, String string) throws IOException {
         writeVarInt(out, string.length());
-        out.write(string.getBytes(UTF8));
+        out.write(string.getBytes(StandardCharsets.UTF_8));
     }
 
 	public static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {

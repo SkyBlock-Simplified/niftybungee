@@ -1,8 +1,7 @@
 package net.netcoding.niftybungee.util;
 
 import java.lang.reflect.Array;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Array and List Checking/Converting
@@ -10,13 +9,23 @@ import java.util.Set;
 public class ListUtil {
 
 	/**
-	 * Gets if the {@code value} is empty or null.
+	 * Gets the number of elements in this array.
 	 * 
-	 * @param value to check
-	 * @return true if empty or null, otherwise false
+	 * @param array Array to retrieve size of.
+	 * @return Number of elements in this array.
 	 */
-	public static <T> boolean isEmpty(T[] value) {
-		return value == null || value.length == 0;
+	public static <T> int sizeOf(T[] array) {
+		return array.length;
+	}
+
+	/**
+	 * Gets the number of elements in this collection.
+	 * 
+	 * @param collection Collection to retrieve size of.
+	 * @return Number of elements in this collection.
+	 */
+	public static <T> int sizeOf(Collection<? extends T> collection) {
+		return collection.size();
 	}
 
 	/**
@@ -25,8 +34,8 @@ public class ListUtil {
 	 * @param value to check
 	 * @return true if empty or null, otherwise false
 	 */
-	public static <T> boolean isEmpty(List<T> value) {
-		return value == null || value.size() == 0;
+	public static <T> boolean isEmpty(T[] array) {
+		return array == null || array.length == 0;
 	}
 
 	/**
@@ -35,8 +44,8 @@ public class ListUtil {
 	 * @param value to check
 	 * @return true if empty or null, otherwise false
 	 */
-	public static <T> boolean isEmpty(Set<T> value) {
-		return value == null || value.size() == 0;
+	public static <T> boolean isEmpty(Collection<? extends T> collection) {
+		return collection == null || collection.isEmpty();
 	}
 
 	/**
@@ -45,8 +54,8 @@ public class ListUtil {
 	 * @param value to check
 	 * @return true if not empty or null, otherwise false
 	 */
-	public static <T> boolean notEmpty(T[] value) {
-		return !isEmpty(value);
+	public static <T> boolean notEmpty(T[] array) {
+		return !isEmpty(array);
 	}
 
 	/**
@@ -55,18 +64,8 @@ public class ListUtil {
 	 * @param value to check
 	 * @return true if not empty or null, otherwise false
 	 */
-	public static <T> boolean notEmpty(List<T> value) {
-		return !isEmpty(value);
-	}
-
-	/**
-	 * Gets if the {@code value} is not empty.
-	 * 
-	 * @param value to check
-	 * @return true if not empty or null, otherwise false
-	 */
-	public static <T> boolean notEmpty(Set<T> value) {
-		return !isEmpty(value);
+	public static <T> boolean notEmpty(Collection<? extends T> collection) {
+		return !isEmpty(collection);
 	}
 
 	/**
@@ -77,9 +76,9 @@ public class ListUtil {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T[] toArray(List<T> list, Class<T> type) {
+	public static <T> T[] toArray(Collection<? extends T> collection, Class<T> type) {
 		try {
-			return list.toArray((T[])Array.newInstance(type, list.size()));
+			return collection.toArray((T[])Array.newInstance(type, collection.size()));
 		} catch (NullPointerException npe) {
 			return (T[])new Object[] { };
 		}

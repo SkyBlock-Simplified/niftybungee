@@ -14,7 +14,7 @@ import net.md_5.bungee.api.event.ServerSwitchEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.netcoding.niftybungee.NiftyBungee;
-import net.netcoding.niftybungee.util.ByteUtil;
+import net.netcoding.niftycore.util.ByteUtil;
 
 import com.google.gson.JsonObject;
 
@@ -25,16 +25,12 @@ public class BungeeHelper implements Listener {
 	private volatile boolean running = false;
 	private volatile int totalServers = 0;
 	private volatile int processedServers = 0;
+	private volatile long startTime = 0;
 	private int taskId = -1;
-
-	public BungeeHelper() {
-		this.startThread();
-	}
 
 	/**
 	 * When the proxy gets reloaded, resend the list of servers and information.
 	 */
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onProxyReload(ProxyReloadEvent event) {
 		this.stopThread(false);
@@ -53,7 +49,6 @@ public class BungeeHelper implements Listener {
 	 * then notify said server of all bungee servers to cache with, and send out
 	 * a PlayerJoin event to all servers.
 	 */
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onServerSwitch(ServerSwitchEvent event) {
 		final ServerInfo connected = event.getPlayer().getServer().getInfo();
@@ -113,6 +108,9 @@ public class BungeeHelper implements Listener {
 					if (++processedServers == totalServers) {
 						processedServers = 0;
 						running = false;
+
+						System.out.println("all pings to complete took: " + (System.currentTimeMillis() - startTime));
+
 						startThread();
 					}
 				}
@@ -143,6 +141,7 @@ public class BungeeHelper implements Listener {
 					int count = servers.size();
 					totalServers = count;
 					processedServers = 0;
+					startTime = System.currentTimeMillis();
 
 					for (ServerInfo sendThis : servers)
 						sendServerInfo(sendThis, servers, true, true);

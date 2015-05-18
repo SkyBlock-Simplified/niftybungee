@@ -9,11 +9,10 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 abstract class MinecraftServer {
 
 	protected final ServerInfo serverInfo;
-	private String gameVersion = "";
 	private int maxPlayers = 0;
 	private boolean online = false;
-	private int protocolVersion = -1;
 	private String motd = "";
+	private Version version = Version.DEFAULT;
 	final transient ServerPingListener listener;
 
 	MinecraftServer(ServerInfo serverInfo, ServerPingListener listener) {
@@ -28,16 +27,13 @@ abstract class MinecraftServer {
 		if (this == obj) return true;
 		if (!(obj instanceof MinecraftServer)) return false;
 		MinecraftServer server = (MinecraftServer)obj;
-		if (!this.getAddress().equals(server.getAddress())) return false;
+		if (!server.getAddress().getAddress().getHostAddress().equals(this.getAddress().getAddress().getHostAddress())) return false;
+		if (server.getAddress().getPort() != this.getAddress().getPort()) return false;
 		return true;
 	}
 
 	public InetSocketAddress getAddress() {
 		return this.serverInfo.getAddress();
-	}
-
-	public String getGameVersion() {
-		return this.gameVersion;
 	}
 
 	public int getMaxPlayers() {
@@ -60,15 +56,13 @@ abstract class MinecraftServer {
 		return this.serverInfo.getPlayers();
 	}
 
-	public int getProtocolVersion() {
-		return this.protocolVersion;
+	public Version getVersion() {
+		return this.version;
 	}
 
 	@Override
 	public int hashCode() {
-		int hashCode = 31 * (this.getAddress() == null ? 0 : this.getAddress().hashCode());
-		hashCode *= this.getName().hashCode();
-		return hashCode;
+		return 31 * (this.getAddress() == null ? 0 : this.getAddress().hashCode());
 	}
 
 	public boolean isOnline() {
@@ -79,13 +73,8 @@ abstract class MinecraftServer {
 
 	void reset() {
 		this.motd = this.serverInfo.getMotd();
-		this.protocolVersion = -1;
-		this.gameVersion = "";
 		this.maxPlayers = 0;
-	}
-
-	void setGameVersion(String gameVersion) {
-		this.gameVersion = gameVersion;
+		this.version = Version.DEFAULT;
 	}
 
 	void setMaxPlayers(int maxPlayers) {
@@ -100,8 +89,29 @@ abstract class MinecraftServer {
 		this.online = online;
 	}
 
-	void setProtocolVersion(int protocolVersion) {
-		this.protocolVersion = protocolVersion;
+	void setVersion(String name, int protocol) {
+		this.version = new Version(name, protocol);
+	}
+
+	public static class Version {
+
+		static final Version DEFAULT = new Version("", 0);
+		private final String name;
+		private final int protocol;
+
+		Version(String name, int protocol) {
+			this.name = name;
+			this.protocol = protocol;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public int getProtocol() {
+			return this.protocol;
+		}
+
 	}
 
 }

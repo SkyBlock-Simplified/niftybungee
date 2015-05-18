@@ -6,7 +6,7 @@ import java.util.List;
 
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.netcoding.niftybungee.util.ByteUtil;
+import net.netcoding.niftycore.util.ByteUtil;
 
 public class ServerPingCallback implements ServerPingListener {
 
@@ -21,6 +21,8 @@ public class ServerPingCallback implements ServerPingListener {
 	/**
 	 * When a ping on a server is completed, send the resulting
 	 * information to the requesting server.
+	 * 
+	 * @param server The server which was pinged.
 	 */
 	@Override
 	public void onServerPing(MinecraftServer server) {
@@ -31,8 +33,8 @@ public class ServerPingCallback implements ServerPingListener {
 
 		if (server.isOnline()) {
 			objs.add(server.getMotd());
-			objs.add(server.getGameVersion());
-			objs.add(server.getProtocolVersion());
+			objs.add(server.getVersion().getName());
+			objs.add(server.getVersion().getProtocol());
 			objs.add(server.getMaxPlayers());
 			objs.add(this.updatePlayers);
 
@@ -44,8 +46,10 @@ public class ServerPingCallback implements ServerPingListener {
 			}
 		}
 
+		byte[] data = ByteUtil.toByteArray(objs);
+
 		for (ServerInfo target : this.targets)
-			target.sendData(BungeeHelper.NIFTY_CHANNEL, ByteUtil.toByteArray(objs));
+			target.sendData(BungeeHelper.NIFTY_CHANNEL, data);
 	}
 
 }

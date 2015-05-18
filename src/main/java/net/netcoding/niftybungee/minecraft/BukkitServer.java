@@ -11,7 +11,7 @@ import java.util.List;
 
 import net.md_5.bungee.api.config.ServerInfo;
 import net.netcoding.niftybungee.NiftyBungee;
-import net.netcoding.niftybungee.util.DataUtil;
+import net.netcoding.niftycore.util.DataUtil;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.gson.Gson;
@@ -49,8 +49,7 @@ public class BukkitServer extends MinecraftServer {
 									StatusResponse response = processResponse(dataInputStream);
 
 									setMotd(response.getMotd());
-									setGameVersion(response.getVersion().getName());
-									setProtocolVersion(response.getVersion().getProtocol());
+									setVersion(response.getVersion().getName(), response.getVersion().getProtocol());
 									setMaxPlayers(response.getPlayers().getMax());
 									setOnline(true);
 								}

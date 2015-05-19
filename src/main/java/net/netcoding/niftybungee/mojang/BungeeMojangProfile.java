@@ -1,6 +1,8 @@
 package net.netcoding.niftybungee.mojang;
 
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftycore.minecraft.MinecraftServer;
 import net.netcoding.niftycore.mojang.MojangProfile;
 
@@ -14,7 +16,7 @@ public class BungeeMojangProfile extends MojangProfile {
 
 	@Override
 	public String getName() {
-		return null;
+		return this.name;
 	}
 
 	public final ProxiedPlayer getPlayer() {
@@ -23,12 +25,12 @@ public class BungeeMojangProfile extends MojangProfile {
 
 	@Override
 	public MinecraftServer getServer() {
-		return null;
+		return NiftyBungee.getBukkitHelper().getServer(this.getPlayer().getServer().getInfo());
 	}
 
 	@Override
 	public boolean isOnlineAnywhere() {
-		return this.getPlayer() != null;
+		return ProxyServer.getInstance().getPlayer(this.getUniqueId()) != null;
 	}
 
 }

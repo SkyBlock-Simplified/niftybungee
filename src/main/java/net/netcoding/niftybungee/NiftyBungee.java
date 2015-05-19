@@ -1,31 +1,45 @@
 package net.netcoding.niftybungee;
 
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.plugin.Plugin;
-import net.netcoding.niftybungee.minecraft.BungeeHelper;
+import net.netcoding.niftybungee.minecraft.BungeePingHelper;
+import net.netcoding.niftybungee.minecraft.BungeePlugin;
+import net.netcoding.niftybungee.minecraft.messages.BukkitHelper;
+import net.netcoding.niftybungee.mojang.BungeeMojangRepository;
 
-public class NiftyBungee extends Plugin {
+public class NiftyBungee extends BungeePlugin {
 
 	private static transient NiftyBungee plugin;
-	private transient BungeeHelper listener;
+	private static transient BungeeMojangRepository repository;
+	private static transient BukkitHelper bukkitHelper;
+	private transient BungeePingHelper listener;
 
 	@Override
 	public void onEnable() {
+		this.getLog().console("Registering Helpers");
 		plugin = this;
-		ProxyServer.getInstance().getConfig().getListeners().iterator().next().getHost();
-		this.getProxy().registerChannel(BungeeHelper.NIFTY_CHANNEL);
-		this.getProxy().getPluginManager().registerListener(this, this.listener = new BungeeHelper());
+		repository = new BungeeMojangRepository();
+		bukkitHelper = new BukkitHelper();
+
+		this.getProxy().registerChannel(BungeePingHelper.NIFTY_CHANNEL);
+		this.getProxy().getPluginManager().registerListener(this, this.listener = new BungeePingHelper());
 	}
 
 	@Override
 	public void onDisable() {
-		this.getProxy().unregisterChannel(BungeeHelper.NIFTY_CHANNEL);
+		this.getProxy().unregisterChannel(BungeePingHelper.NIFTY_CHANNEL);
 		this.getProxy().getPluginManager().unregisterListener(this.listener);
 		this.listener.stopThread();
 		this.listener = null;
 	}
 
-	public static NiftyBungee getPlugin() {
+	public final static BukkitHelper getBukkitHelper() {
+		return bukkitHelper;
+	}
+
+	public final static BungeeMojangRepository getMojangRepository() {
+		return repository;
+	}
+
+	public final static NiftyBungee getPlugin() {
 		return plugin;
 	}
 

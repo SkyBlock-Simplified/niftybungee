@@ -5,10 +5,13 @@ import java.util.Collection;
 import java.util.List;
 
 import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
+import net.netcoding.niftycore.minecraft.MinecraftServer;
+import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
+import net.netcoding.niftycore.mojang.MojangProfile;
 import net.netcoding.niftycore.util.ByteUtil;
 
-public class ServerPingCallback implements ServerPingListener {
+public class ServerPingCallback implements MinecraftPingListener {
 
 	private final Collection<ServerInfo> targets;
 	private final boolean updatePlayers;
@@ -25,7 +28,7 @@ public class ServerPingCallback implements ServerPingListener {
 	 * @param server The server which was pinged.
 	 */
 	@Override
-	public void onServerPing(MinecraftServer server) {
+	public void onPing(MinecraftServer server) {
 		List<Object> objs = new ArrayList<>();
 		objs.add("ServerInfo");
 		objs.add(server.getName());
@@ -41,15 +44,15 @@ public class ServerPingCallback implements ServerPingListener {
 			if (this.updatePlayers) {
 				objs.add(server.getPlayerList().size());
 
-				for (ProxiedPlayer player : server.getPlayerList())
-					objs.add(BungeeHelper.parsePlayerInfo(player, true));
+				for (MojangProfile profile : server.getPlayerList())
+					objs.add(BungeePingHelper.parsePlayerInfo(((BungeeMojangProfile)profile).getPlayer(), true));
 			}
 		}
 
 		byte[] data = ByteUtil.toByteArray(objs);
 
 		for (ServerInfo target : this.targets)
-			target.sendData(BungeeHelper.NIFTY_CHANNEL, data);
+			target.sendData(BungeePingHelper.NIFTY_CHANNEL, data);
 	}
 
 }

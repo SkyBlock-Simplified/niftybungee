@@ -26,11 +26,6 @@ public class BukkitInfoServer extends BukkitServer {
 	}
 
 	@Override
-	public int getMaxPlayers() {
-		return this.maxPlayers;
-	}
-
-	@Override
 	public String getMotd() {
 		return this.serverInfo.getMotd();
 	}

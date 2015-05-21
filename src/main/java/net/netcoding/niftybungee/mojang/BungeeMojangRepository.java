@@ -18,7 +18,8 @@ import net.netcoding.niftycore.mojang.MojangRepository;
 import net.netcoding.niftycore.mojang.exceptions.ProfileNotFoundException;
 import net.netcoding.niftycore.util.ListUtil;
 import net.netcoding.niftycore.util.concurrent.ConcurrentList;
-import net.netcoding.niftycore.util.gson.JsonObject;
+
+import com.google.gson.JsonObject;
 
 public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile> {
 

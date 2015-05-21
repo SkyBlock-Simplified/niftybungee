@@ -10,17 +10,18 @@ import java.util.List;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftybungee.minecraft.messages.BukkitHelper;
+import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.ping.BukkitServer;
 import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
 import net.netcoding.niftycore.mojang.MojangProfile;
 import net.netcoding.niftycore.util.ByteUtil;
 
-public class BukkitInfoServer extends BukkitServer {
+public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 
 	protected final ServerInfo serverInfo;
 	private Runnable runnable;
 
-	public BukkitInfoServer(ServerInfo serverInfo, MinecraftPingListener listener) {
+	public BukkitInfoServer(ServerInfo serverInfo, MinecraftPingListener<BungeeMojangProfile> listener) {
 		super(serverInfo.getAddress(), listener);
 		this.serverInfo = serverInfo;
 	}
@@ -41,8 +42,8 @@ public class BukkitInfoServer extends BukkitServer {
 	}
 
 	@Override
-	public Collection<MojangProfile> getPlayerList() {
-		MojangProfile[] profiles = NiftyBungee.getMojangRepository().searchByPlayer(this.serverInfo.getPlayers());
+	public Collection<BungeeMojangProfile> getPlayerList() {
+		BungeeMojangProfile[] profiles = NiftyBungee.getMojangRepository().searchByPlayer(this.serverInfo.getPlayers());
 		return Collections.unmodifiableCollection(new HashSet<>(Arrays.asList(profiles)));
 	}
 

@@ -3,13 +3,14 @@ package net.netcoding.niftybungee.minecraft.ping;
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
+import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
 
 public class BungeeInfoServer extends BukkitInfoServer {
 
 	private static final String PING_VERSION = "NiftyPing";
 
-	public BungeeInfoServer(ServerInfo serverInfo, MinecraftPingListener listener) {
+	public BungeeInfoServer(ServerInfo serverInfo, MinecraftPingListener<BungeeMojangProfile> listener) {
 		super(serverInfo, listener);
 	}
 

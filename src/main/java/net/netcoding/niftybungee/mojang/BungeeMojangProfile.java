@@ -24,7 +24,7 @@ public class BungeeMojangProfile extends MojangProfile {
 	}
 
 	@Override
-	public MinecraftServer getServer() {
+	public MinecraftServer<BungeeMojangProfile> getServer() {
 		return NiftyBungee.getBukkitHelper().getServer(this.getPlayer().getServer().getInfo());
 	}
 

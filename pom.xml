@@ -37,8 +37,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 						<configuration>
 							<relocations>
 								<relocation>
-									<pattern>com.google</pattern>
-									<shadedPattern>${project.groupId}.${project.artifactId}.util</shadedPattern>
+									<pattern>com.google.gson</pattern>
+									<shadedPattern>${project.groupId}.${project.artifactId}.util.gson</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>${project.groupId}.niftycore</pattern>

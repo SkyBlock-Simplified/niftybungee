@@ -14,37 +14,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 
 	<dependencies>
 		<dependency>
-			<groupId>net.netcoding</groupId>
-			<artifactId>niftycore</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
 			<groupId>net.md-5</groupId>
 			<artifactId>bungeecord-api</artifactId>
-			<version>1.8-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>net.netcoding</groupId>
+			<artifactId>niftycore</artifactId>
+		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>1.4</version>
-				<executions>
-					<execution>
-						<configuration>
-							<relocations>
-								<relocation>
-									<pattern>com.google.gson</pattern>
-									<shadedPattern>${project.groupId}.${project.dependencies[0].artifactId}.util.gson</shadedPattern>
-								</relocation>
-							</relocations>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 </project>

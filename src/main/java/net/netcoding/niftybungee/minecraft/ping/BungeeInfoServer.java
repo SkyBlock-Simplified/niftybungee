@@ -5,6 +5,7 @@ import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
+import net.netcoding.niftycore.util.StringUtil;
 
 public class BungeeInfoServer extends BukkitInfoServer {
 
@@ -23,7 +24,7 @@ public class BungeeInfoServer extends BukkitInfoServer {
 			public void done(ServerPing result, Throwable error) {
 				if (error != null) {
 					reset();
-					error.printStackTrace();
+					System.out.println(StringUtil.format("Unable to ping {0}: {1}", getName(), error.getMessage()));
 				} else {
 					if (result.getVersion().getName().startsWith(PING_VERSION)) {
 						//String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];

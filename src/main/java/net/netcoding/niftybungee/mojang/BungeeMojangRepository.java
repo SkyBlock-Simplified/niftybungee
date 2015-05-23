@@ -27,6 +27,15 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		new RepositoryListener();
 	}
 
+	private BungeeMojangProfile createProfile(ProxiedPlayer player) {
+		JsonObject json = new JsonObject();
+		json.addProperty("id", player.getName());
+		json.addProperty("name", player.getName());
+		json.addProperty("ip", player.getAddress().getAddress().getHostAddress());
+		json.addProperty("port", player.getAddress().getPort());
+		return GSON.fromJson(json.toString(), BungeeMojangProfile.class);
+	}
+
 	@Override
 	protected final boolean isOnline() {
 		return ProxyServer.getInstance().getConfig().isOnlineMode();
@@ -45,7 +54,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 				for (ProxiedPlayer player : server.getPlayers()) {
 					if (player.getName().equalsIgnoreCase(criteriaName)) {
-						found = new BungeeMojangProfile(player);
+						found = this.createProfile(player);
 						break;
 					}
 				}
@@ -53,7 +62,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 				if (found == null) {
 					for (ProxiedPlayer player : server.getPlayers()) {
 						if (player.getName().toLowerCase().startsWith(criteriaName)) {
-							found = new BungeeMojangProfile(player);
+							found = this.createProfile(player);
 							break;
 						}
 					}
@@ -78,7 +87,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		for (ServerInfo server : ProxyServer.getInstance().getServers().values()) {
 			for (ProxiedPlayer player : server.getPlayers()) {
 				if (player.getUniqueId().equals(uniqueId))
-					return new BungeeMojangProfile(player);
+					return this.createProfile(player);
 			}
 		}
 
@@ -132,14 +141,8 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 		try {
 			// Create Temporary Matching Profiles
-			for (ProxiedPlayer player : players) {
-				JsonObject json = new JsonObject();
-				json.addProperty("id", player.getUniqueId().toString());
-				json.addProperty("name", player.getName());
-				json.addProperty("ip", player.getAddress().getAddress().getHostAddress());
-				json.addProperty("port", player.getAddress().getPort());
-				tempProfiles.add(GSON.fromJson(json, BungeeMojangProfile.class));
-			}
+			for (ProxiedPlayer player : players)
+				tempProfiles.add(this.createProfile(player));
 
 			// Search Online Servers
 			for (BungeeMojangProfile temp : tempProfiles) {
@@ -178,9 +181,9 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		}
 
 		@EventHandler
-		public void onServerConnected(final ServerConnectedEvent event) {
+		public void onServerConnected(ServerConnectedEvent event) {
 			ProxiedPlayer player = event.getPlayer();
-			BungeeMojangProfile profile = new BungeeMojangProfile(player);
+			BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(player);
 
 			for (MojangProfile cache : CACHE) {
 				if (cache.equals(profile))

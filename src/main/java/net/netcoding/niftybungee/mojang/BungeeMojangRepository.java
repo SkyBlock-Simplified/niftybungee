@@ -156,9 +156,9 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 			}
 
 			// Search Unique ID
-			for (MojangProfile temp : tempProfiles) {
-				MojangProfile profile = this.searchByUniqueId(temp.getUniqueId());
-				profiles.add((BungeeMojangProfile)profile);
+			for (BungeeMojangProfile temp : tempProfiles) {
+				BungeeMojangProfile profile = this.searchByUniqueId(temp.getUniqueId());
+				profiles.add(profile);
 				tempProfiles.remove(temp);
 			}
 
@@ -166,10 +166,6 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		} catch (ProfileNotFoundException pnfex) {
 			throw new ProfileNotFoundException(pnfex.getReason(), type, pnfex.getCause(), ListUtil.toArray(tempProfiles, BungeeMojangProfile.class));
 		} catch (Exception ex) {
-			// TODO: Offline-Mode NullPointerException
-			if (ex instanceof NullPointerException)
-				ex.printStackTrace();
-
 			throw new ProfileNotFoundException(ProfileNotFoundException.Reason.EXCEPTION, type, ex, ListUtil.toArray(tempProfiles, BungeeMojangProfile.class));
 		}
 	}

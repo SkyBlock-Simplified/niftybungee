@@ -8,19 +8,13 @@ import net.netcoding.niftycore.mojang.MojangProfile;
 
 public class BungeeMojangProfile extends MojangProfile {
 
-	private final ProxiedPlayer player;
-
-	BungeeMojangProfile(ProxiedPlayer player) {
-		this.player = player;
-	}
-
 	@Override
 	public String getName() {
 		return this.name;
 	}
 
 	public final ProxiedPlayer getPlayer() {
-		return this.player;
+		return ProxyServer.getInstance().getPlayer(this.getUniqueId());
 	}
 
 	@Override

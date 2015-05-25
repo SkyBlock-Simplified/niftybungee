@@ -34,8 +34,10 @@ public class BukkitHelper extends BungeeHelper {
 	private static final ConcurrentHashMap<String, BungeeInfoServer> SERVERS = new ConcurrentHashMap<>();
 	private PlayerListener playerListener = new PlayerListener();
 	private ConcurrentSet<String> processed = new ConcurrentSet<>();
+	private volatile boolean stopped = false;
+	private boolean hardStopped = false;
+	//private volatile int taskId = -1;
 	private long startTime = 0;
-	private int taskId = -1;
 	private final Runnable threadUpdate = new Runnable() {
 		@Override
 		public void run() {
@@ -108,12 +110,21 @@ public class BukkitHelper extends BungeeHelper {
 	}
 
 	private void startThread() {
-		if (this.taskId > -2) {
-			this.taskId = MinecraftScheduler.runAsync(new Runnable() {
+		if (!this.hardStopped) {
+			final Collection<BungeeInfoServer> servers = NiftyBungee.getBukkitHelper().getServers();
+			long delay = 20;
+
+			if (processed.size() == servers.size()) {
+				delay = System.currentTimeMillis() - startTime;
+				long compare = delay + (servers.size() * 5);
+
+				if (compare < 500)
+					delay = 500 - compare;
+			}
+
+			MinecraftScheduler.runAsync(new Runnable() {
 				@Override
 				public void run() {
-					Collection<BungeeInfoServer> servers = NiftyBungee.getBukkitHelper().getServers();
-
 					if (servers.size() > 0) {
 						Iterator<BungeeInfoServer> iterator = servers.iterator();
 						BungeeInfoServer server = null;
@@ -123,18 +134,23 @@ public class BukkitHelper extends BungeeHelper {
 								break;
 						}
 
-						if (server == null) {
-							System.out.println(processed.size() + " pings completion time: " + (System.currentTimeMillis() - startTime));
-							startTime = System.currentTimeMillis();
-							server = servers.iterator().next();
+						if (processed.size() == servers.size()) {
 							processed.clear();
+							server = servers.iterator().next();
 						}
 
+						if (processed.size() == 0)
+							startTime = System.currentTimeMillis();
+
 						processed.add(server.getName());
+
+						if (stopped)
+							return;
+
 						sendServerInfo(server);
 					}
 				}
-			}).getId();
+			}, delay);
 		}
 	}
 
@@ -143,9 +159,12 @@ public class BukkitHelper extends BungeeHelper {
 	}
 
 	private void stopThread(boolean hard) {
-		if (this.taskId > 0) {
-			MinecraftScheduler.cancel(this.taskId);
-			this.taskId = (hard ? -2 : -1);
+		if (this.hardStopped)
+			return;
+
+		if (!this.stopped) {
+			this.stopped = true;
+			this.hardStopped = hard;
 		}
 	}
 
@@ -153,7 +172,7 @@ public class BukkitHelper extends BungeeHelper {
 		if (!ProxyServer.getInstance().getChannels().contains(NIFTY_CHANNEL)) {
 			ProxyServer.getInstance().registerChannel(NIFTY_CHANNEL);
 			this.playerListener = new PlayerListener();
-			startThread();
+			MinecraftScheduler.schedule(threadUpdate, 1);
 		}
 	}
 
@@ -164,7 +183,7 @@ public class BukkitHelper extends BungeeHelper {
 		}
 	}
 
-	private class PlayerListener extends BungeeListener {
+	protected class PlayerListener extends BungeeListener {
 
 		public PlayerListener() {
 			super(NiftyBungee.getPlugin());

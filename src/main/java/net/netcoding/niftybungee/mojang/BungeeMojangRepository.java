@@ -29,7 +29,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 	private BungeeMojangProfile createProfile(ProxiedPlayer player) {
 		JsonObject json = new JsonObject();
-		json.addProperty("id", player.getName());
+		json.addProperty("id", player.getUniqueId().toString());
 		json.addProperty("name", player.getName());
 		json.addProperty("ip", player.getAddress().getAddress().getHostAddress());
 		json.addProperty("port", player.getAddress().getPort());
@@ -170,7 +170,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		}
 	}
 
-	private static class RepositoryListener extends BungeeListener {
+	protected static class RepositoryListener extends BungeeListener {
 
 		public RepositoryListener() {
 			super(NiftyBungee.getPlugin());

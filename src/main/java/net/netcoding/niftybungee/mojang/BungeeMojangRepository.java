@@ -137,36 +137,17 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	public BungeeMojangProfile[] searchByPlayer(Collection<? extends ProxiedPlayer> players) throws ProfileNotFoundException {
 		final ProfileNotFoundException.LookupType type = ProfileNotFoundException.LookupType.OFFLINE_PLAYERS;
 		List<BungeeMojangProfile> profiles = new ArrayList<>();
-		ConcurrentList<BungeeMojangProfile> tempProfiles = new ConcurrentList<>();
 
 		try {
-			// Create Temporary Matching Profiles
+			// Create Matching Profiles
 			for (ProxiedPlayer player : players)
-				tempProfiles.add(this.createProfile(player));
-
-			// Search Online Servers
-			for (BungeeMojangProfile temp : tempProfiles) {
-				for (ProxiedPlayer player : ProxyServer.getInstance().getPlayers()) {
-					if (player.equals(temp.getPlayer())) {
-						profiles.add(temp);
-						tempProfiles.remove(temp);
-						break;
-					}
-				}
-			}
-
-			// Search Unique ID
-			for (BungeeMojangProfile temp : tempProfiles) {
-				BungeeMojangProfile profile = this.searchByUniqueId(temp.getUniqueId());
-				profiles.add(profile);
-				tempProfiles.remove(temp);
-			}
+				profiles.add(this.createProfile(player));
 
 			return ListUtil.toArray(profiles, BungeeMojangProfile.class);
 		} catch (ProfileNotFoundException pnfex) {
-			throw new ProfileNotFoundException(pnfex.getReason(), type, pnfex.getCause(), ListUtil.toArray(tempProfiles, BungeeMojangProfile.class));
+			throw new ProfileNotFoundException(pnfex.getReason(), type, pnfex.getCause(), ListUtil.toArray(profiles, BungeeMojangProfile.class));
 		} catch (Exception ex) {
-			throw new ProfileNotFoundException(ProfileNotFoundException.Reason.EXCEPTION, type, ex, ListUtil.toArray(tempProfiles, BungeeMojangProfile.class));
+			throw new ProfileNotFoundException(ProfileNotFoundException.Reason.EXCEPTION, type, ex, ListUtil.toArray(profiles, BungeeMojangProfile.class));
 		}
 	}
 

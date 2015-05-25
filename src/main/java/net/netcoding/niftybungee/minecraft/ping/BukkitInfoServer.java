@@ -19,7 +19,7 @@ import net.netcoding.niftycore.util.ByteUtil;
 public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 
 	protected final ServerInfo serverInfo;
-	private Runnable runnable;
+	protected Runnable runnable;
 
 	public BukkitInfoServer(ServerInfo serverInfo, MinecraftPingListener<BungeeMojangProfile> listener) {
 		super(serverInfo.getAddress(), listener);
@@ -49,8 +49,6 @@ public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 
 	@Override
 	public void onPing() {
-		super.onPing();
-
 		List<Object> objs = new ArrayList<>();
 		objs.add("ServerInfo");
 		objs.add(this.getName());
@@ -74,6 +72,8 @@ public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 
 		if (this.runnable != null)
 			this.runnable.run();
+
+		super.onPing();
 	}
 
 	public void sendData(String channel, byte[] data) {

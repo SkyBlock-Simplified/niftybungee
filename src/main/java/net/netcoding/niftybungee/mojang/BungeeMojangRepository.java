@@ -153,7 +153,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 	protected static class RepositoryListener extends BungeeListener {
 
-		public RepositoryListener() {
+		private RepositoryListener() {
 			super(NiftyBungee.getPlugin());
 		}
 

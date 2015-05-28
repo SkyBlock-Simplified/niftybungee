@@ -1,5 +1,8 @@
 package net.netcoding.niftybungee.minecraft.messages;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,14 +32,15 @@ import com.google.gson.JsonObject;
 
 public class BukkitHelper extends BungeeHelper {
 
+	// https://status.mojang.com/check
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
 	private static final ConcurrentHashMap<String, BungeeInfoServer> SERVERS = new ConcurrentHashMap<>();
+	private static final ServerSocket SOCKET;
 	private PlayerListener playerListener = new PlayerListener();
 	private ConcurrentSet<String> processed = new ConcurrentSet<>();
 	private volatile boolean stopped = false;
 	private boolean hardStopped = false;
-	//private volatile int taskId = -1;
 	private long startTime = 0;
 	private final Runnable threadUpdate = new Runnable() {
 		@Override
@@ -48,6 +52,16 @@ public class BukkitHelper extends BungeeHelper {
 	static {
 		for (ServerInfo server : ProxyServer.getInstance().getServers().values())
 			SERVERS.put(server.getName(), new BungeeInfoServer(server, null));
+
+		ServerSocket socket = null;
+
+		try {
+			socket = new ServerSocket(0);
+		} catch (Exception ex) {
+			socket = null;
+		}
+
+		SOCKET = socket;
 	}
 
 	public BukkitHelper(Plugin plugin) {
@@ -72,6 +86,14 @@ public class BukkitHelper extends BungeeHelper {
 		return Collections.unmodifiableSet(new HashSet<>(SERVERS.values()));
 	}
 
+	public static Socket getSocket() throws IOException {
+		return SOCKET.accept();
+	}
+
+	public static boolean isSocketListening() {
+		return SOCKET != null && !SOCKET.isClosed();
+	}
+
 	public static String parseServerInfo(BungeeInfoServer server) {
 		JsonObject json = new JsonObject();
 		json.addProperty("name", server.getName());
@@ -91,11 +113,6 @@ public class BukkitHelper extends BungeeHelper {
 		}
 
 		return json.toString();
-	}
-
-	private void sendServerInfo(BungeeInfoServer server) {
-		server.setRunnable(this.threadUpdate);
-		server.ping();
 	}
 
 	private static void sendServerList(BungeeInfoServer server) {
@@ -147,7 +164,8 @@ public class BukkitHelper extends BungeeHelper {
 						if (stopped)
 							return;
 
-						sendServerInfo(server);
+						server.setRunnable(threadUpdate);
+						server.ping();
 					}
 				}
 			}, delay);
@@ -165,6 +183,12 @@ public class BukkitHelper extends BungeeHelper {
 		if (!this.stopped) {
 			this.stopped = true;
 			this.hardStopped = hard;
+
+			if (this.hardStopped && isSocketListening()) {
+				try {
+					SOCKET.close();
+				} catch (Exception ioex) { }
+			}
 		}
 	}
 
@@ -185,7 +209,7 @@ public class BukkitHelper extends BungeeHelper {
 
 	protected class PlayerListener extends BungeeListener {
 
-		public PlayerListener() {
+		private PlayerListener() {
 			super(NiftyBungee.getPlugin());
 		}
 

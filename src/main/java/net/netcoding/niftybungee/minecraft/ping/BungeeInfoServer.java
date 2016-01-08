@@ -1,8 +1,5 @@
 package net.netcoding.niftybungee.minecraft.ping;
 
-import java.io.DataOutputStream;
-import java.net.Socket;
-
 import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -12,29 +9,43 @@ import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
 import net.netcoding.niftycore.util.StringUtil;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
 public class BungeeInfoServer extends BukkitInfoServer {
 
-	private static final String PING_VERSION = "NiftyPing";
-	private boolean usesSocket = false;
+	private static final String NIFTY_PING = "NiftyPing";
+	private String socketIp = null;
+	private int socketPort = -1;
 
 	public BungeeInfoServer(ServerInfo serverInfo, MinecraftPingListener<BungeeMojangProfile> listener) {
 		super(serverInfo, listener);
 	}
 
+	public boolean isBukkitSocketListening() {
+		return StringUtil.notEmpty(this.socketIp) && this.socketPort > 0;
+	}
+
 	private void onNiftyPing(int port) {
-		try {
-			try (Socket socket = new Socket(this.getAddress().getAddress().getHostAddress(), port)) {
-				try (DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())) {
-					System.out.println(StringUtil.format("{0}: Sending NiftyPing...", System.currentTimeMillis()));
-					outputStream.writeUTF("NiftyPing");
-					outputStream.writeUTF(this.getAddress().getAddress().getHostAddress());
-					outputStream.writeInt(BukkitHelper.getSocket().getLocalPort());
+		try (Socket socket = new Socket(this.getAddress().getAddress().getHostAddress(), port)) {
+			socket.setSoTimeout(2000);
+
+			try (DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream())) {
+				dataOutputStream.writeUTF(NIFTY_PING);
+				dataOutputStream.writeUTF(BukkitHelper.getSocketWrapper().getSocketAddress());
+				dataOutputStream.writeInt(BukkitHelper.getSocketWrapper().getLocalPort());
+
+				try (DataInputStream dataInputStream = new DataInputStream(socket.getInputStream())) {
+					this.socketIp = dataInputStream.readUTF();
+					this.socketPort = dataInputStream.readInt();
 				}
 			}
 		} catch (Exception ex) {
 			NiftyBungee.getPlugin().getLog().console(ex);
-			// TODO: Possibly Disable Socket
-			// this.usesSocket = false;
+			this.socketIp = null;
+			this.socketPort = -1;
 		}
 	}
 
@@ -51,7 +62,8 @@ public class BungeeInfoServer extends BukkitInfoServer {
 					if (getName().equalsIgnoreCase("pixelmon") && getAddress().getAddress().getHostAddress().equals("192.99.45.103"))
 						System.out.println(StringUtil.format("Unable to ping {0}: {1}", getName(), error.getMessage()));
 				} else {
-					if (result.getVersion().getName().startsWith(PING_VERSION) && BukkitHelper.isSocketListening()) {
+					// Process Socket Registration
+					if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
 						String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];
 						int port = Integer.valueOf(StringUtil.split(" ", niftyPing)[1]);
 						onNiftyPing(port);
@@ -72,19 +84,16 @@ public class BungeeInfoServer extends BukkitInfoServer {
 
 	@Override
 	public void sendData(String channel, byte[] data) {
-		if (BukkitHelper.isSocketListening() && this.usesSocket) {
-			try {
-				try (Socket socket = BukkitHelper.getSocket()) {
-					try (DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())) {
-						outputStream.writeUTF(channel);
-						outputStream.writeInt(data.length);
-						outputStream.write(data);
-					}
+		if (BukkitHelper.getSocketWrapper().isSocketListening() && this.isBukkitSocketListening()) {
+			try (Socket socket = new Socket(this.socketIp, this.socketPort)) {
+				try (DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream())) {
+					dataOutputStream.writeUTF(channel);
+					dataOutputStream.writeInt(data.length);
+					dataOutputStream.write(data);
 				}
-			} catch (Exception ex) {
-				NiftyBungee.getPlugin().getLog().console(ex);
+			} catch (IOException ioex) {
+				NiftyBungee.getPlugin().getLog().console(ioex);
 				// TODO: Possibly Disable Socket
-				// this.usesSocket = false;
 				super.sendData(channel, data);
 			}
 		} else

@@ -1,17 +1,6 @@
 package net.netcoding.niftybungee.minecraft.messages;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.gson.JsonObject;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyReloadEvent;
@@ -27,8 +16,18 @@ import net.netcoding.niftycore.minecraft.scheduler.MinecraftScheduler;
 import net.netcoding.niftycore.mojang.MojangProfile;
 import net.netcoding.niftycore.util.ByteUtil;
 import net.netcoding.niftycore.util.concurrent.ConcurrentSet;
+import net.netcoding.niftycore.wrappers.ServerSocketWrapper;
 
-import com.google.gson.JsonObject;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BukkitHelper extends BungeeHelper {
 
@@ -37,6 +36,7 @@ public class BukkitHelper extends BungeeHelper {
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
 	private static final ConcurrentHashMap<String, BungeeInfoServer> SERVERS = new ConcurrentHashMap<>();
 	private static final ServerSocket SOCKET;
+	private static final ServerSocketWrapper SOCKET_WRAPPER;
 	private PlayerListener playerListener = new PlayerListener();
 	private ConcurrentSet<String> processed = new ConcurrentSet<>();
 	private volatile boolean stopped = false;
@@ -57,11 +57,25 @@ public class BukkitHelper extends BungeeHelper {
 
 		try {
 			socket = new ServerSocket(0);
+			socket.setSoTimeout(2000);
+
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					try {
+						PrintWriter pw = new PrintWriter(NiftyBungee.getPlugin().getDataFolder().getAbsolutePath() + "/test.txt", "UTF-8");
+						pw.println("Shutdown hook called");
+						pw.println("Socket open: " + (getSocketWrapper().isSocketListening()));
+						pw.close();
+					} catch (Exception ignored) { }
+					System.out.println("Shutdown hook called");
+				}
+			});
 		} catch (Exception ex) {
-			socket = null;
+			ex.printStackTrace();
 		}
 
-		SOCKET = socket;
+		SOCKET_WRAPPER = new ServerSocketWrapper(SOCKET = socket);
 	}
 
 	public BukkitHelper(Plugin plugin) {
@@ -86,12 +100,8 @@ public class BukkitHelper extends BungeeHelper {
 		return Collections.unmodifiableSet(new HashSet<>(SERVERS.values()));
 	}
 
-	public static Socket getSocket() throws IOException {
-		return SOCKET.accept();
-	}
-
-	public static boolean isSocketListening() {
-		return SOCKET != null && !SOCKET.isClosed();
+	public static ServerSocketWrapper getSocketWrapper() {
+		return SOCKET_WRAPPER;
 	}
 
 	public static String parseServerInfo(BungeeInfoServer server) {
@@ -184,10 +194,12 @@ public class BukkitHelper extends BungeeHelper {
 			this.stopped = true;
 			this.hardStopped = hard;
 
-			if (this.hardStopped && isSocketListening()) {
+			if (this.hardStopped && getSocketWrapper().isSocketListening()) {
 				try {
+					System.out.println("Closing socket?");
 					SOCKET.close();
-				} catch (Exception ioex) { }
+					System.out.println("Socket closed?");
+				} catch (Exception ignored) { }
 			}
 		}
 	}

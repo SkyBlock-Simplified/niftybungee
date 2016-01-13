@@ -12,7 +12,6 @@ public class NiftyBungee extends BungeePlugin {
 
 	@Override
 	public void onEnable() {
-		//test
 		this.getLog().console("Registering Helpers");
 		plugin = this;
 		repository = new BungeeMojangRepository();
@@ -25,15 +24,15 @@ public class NiftyBungee extends BungeePlugin {
 		bukkitHelper.stopThread();
 	}
 
-	public final static BukkitHelper getBukkitHelper() {
+	public static BukkitHelper getBukkitHelper() {
 		return bukkitHelper;
 	}
 
-	public final static BungeeMojangRepository getMojangRepository() {
+	public static BungeeMojangRepository getMojangRepository() {
 		return repository;
 	}
 
-	public final static NiftyBungee getPlugin() {
+	public static NiftyBungee getPlugin() {
 		return plugin;
 	}
 

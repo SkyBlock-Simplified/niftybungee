@@ -1,11 +1,6 @@
 package net.netcoding.niftybungee.mojang;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
+import com.google.gson.JsonObject;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -19,7 +14,11 @@ import net.netcoding.niftycore.mojang.exceptions.ProfileNotFoundException;
 import net.netcoding.niftycore.util.ListUtil;
 import net.netcoding.niftycore.util.concurrent.ConcurrentList;
 
-import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile> {
 
@@ -96,7 +95,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 	/**
 	 * Locates the profile for this server associated with the given offline player.
-	 * 
+	 *
 	 * @param player Proxied player to search with.
 	 * @return Profile associated with the given player.
 	 * @throws ProfileNotFoundException If unable to locate the players profile.
@@ -118,7 +117,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 	/**
 	 * Locates the profiles for this server associated with the given offline players.
-	 * 
+	 *
 	 * @param players Offline players to search with.
 	 * @return Profiles associated with the list of players.
 	 * @throws ProfileNotFoundException If unable to locate any players profile.
@@ -129,8 +128,8 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 	/**
 	 * Locates the profiles for this server associated with the given offline players.
-	 * 
-	 * @param oplayers Offline players to search with.
+	 *
+	 * @param  players Proxied players to search with.
 	 * @return Profiles associated with the list of players.
 	 * @throws ProfileNotFoundException If unable to locate any players profile.
 	 */
@@ -167,7 +166,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 					CACHE.remove(cache);
 			}
 		}
-		
+
 	}
 
 }

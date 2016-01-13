@@ -1,12 +1,5 @@
 package net.netcoding.niftybungee.minecraft.ping;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
 import net.md_5.bungee.api.config.ServerInfo;
 import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftybungee.minecraft.messages.BukkitHelper;
@@ -15,6 +8,13 @@ import net.netcoding.niftycore.minecraft.ping.BukkitServer;
 import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
 import net.netcoding.niftycore.mojang.MojangProfile;
 import net.netcoding.niftycore.util.ByteUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 
@@ -77,7 +77,11 @@ public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 	}
 
 	public void sendData(String channel, byte[] data) {
-		this.serverInfo.sendData(channel, data);
+		this.sendData(channel, data, true);
+	}
+
+	public void sendData(String channel, byte[] data, boolean queue) {
+		this.serverInfo.sendData(channel, data, queue);
 	}
 
 	public void setRunnable(Runnable runnable) {

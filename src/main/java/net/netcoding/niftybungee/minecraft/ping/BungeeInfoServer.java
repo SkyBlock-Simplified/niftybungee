@@ -94,10 +94,10 @@ public class BungeeInfoServer extends BukkitInfoServer {
 			} catch (IOException ioex) {
 				NiftyBungee.getPlugin().getLog().console(ioex);
 				// TODO: Possibly Disable Socket
-				super.sendData(channel, data);
+				super.sendData(channel, data, false);
 			}
 		} else
-			super.sendData(channel, data);
+			super.sendData(channel, data, false);
 	}
 
 }

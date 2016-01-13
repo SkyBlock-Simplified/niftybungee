@@ -154,7 +154,7 @@ public class BukkitHelper extends BungeeHelper {
 				if (compare < 500)
 					delay = 500 - compare;
 
-				if (delay < 00)
+				if (delay < 0)
 					delay = 20;
 			}
 

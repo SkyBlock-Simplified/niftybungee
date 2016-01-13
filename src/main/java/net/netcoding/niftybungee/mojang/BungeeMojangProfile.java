@@ -3,7 +3,7 @@ package net.netcoding.niftybungee.mojang;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.netcoding.niftybungee.NiftyBungee;
-import net.netcoding.niftycore.minecraft.MinecraftServer;
+import net.netcoding.niftybungee.minecraft.ping.BungeeInfoServer;
 import net.netcoding.niftycore.mojang.MojangProfile;
 
 public class BungeeMojangProfile extends MojangProfile {
@@ -18,7 +18,7 @@ public class BungeeMojangProfile extends MojangProfile {
 	}
 
 	@Override
-	public MinecraftServer<BungeeMojangProfile> getServer() {
+	public BungeeInfoServer getServer() {
 		return NiftyBungee.getBukkitHelper().getServer(this.getPlayer().getServer().getInfo());
 	}
 

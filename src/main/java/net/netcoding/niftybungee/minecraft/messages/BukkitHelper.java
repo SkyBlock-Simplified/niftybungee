@@ -18,7 +18,6 @@ import net.netcoding.niftycore.util.ByteUtil;
 import net.netcoding.niftycore.util.concurrent.ConcurrentSet;
 import net.netcoding.niftycore.wrappers.ServerSocketWrapper;
 
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,12 +38,14 @@ public class BukkitHelper extends BungeeHelper {
 	private static final ServerSocketWrapper SOCKET_WRAPPER;
 	private PlayerListener playerListener = new PlayerListener();
 	private ConcurrentSet<String> processed = new ConcurrentSet<>();
+	private volatile long lastPing = System.currentTimeMillis();
 	private volatile boolean stopped = false;
 	private boolean hardStopped = false;
 	private long startTime = 0;
 	private final Runnable threadUpdate = new Runnable() {
 		@Override
 		public void run() {
+			lastPing = System.currentTimeMillis();
 			startThread();
 		}
 	};
@@ -59,7 +60,7 @@ public class BukkitHelper extends BungeeHelper {
 			socket = new ServerSocket(0);
 			socket.setSoTimeout(2000);
 
-			Runtime.getRuntime().addShutdownHook(new Thread() {
+			/*Runtime.getRuntime().addShutdownHook(new Thread() {
 				@Override
 				public void run() {
 					try {
@@ -70,7 +71,7 @@ public class BukkitHelper extends BungeeHelper {
 					} catch (Exception ignored) { }
 					System.out.println("Shutdown hook called");
 				}
-			});
+			});*/
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -147,6 +148,9 @@ public class BukkitHelper extends BungeeHelper {
 
 				if (compare < 500)
 					delay = 500 - compare;
+
+				if (delay < 0)
+					delay = 0;
 			}
 
 			MinecraftScheduler.runAsync(new Runnable() {
@@ -194,13 +198,13 @@ public class BukkitHelper extends BungeeHelper {
 			this.stopped = true;
 			this.hardStopped = hard;
 
-			if (this.hardStopped && getSocketWrapper().isSocketListening()) {
+			/*if (this.hardStopped && getSocketWrapper().isSocketListening()) {
 				try {
 					System.out.println("Closing socket?");
 					SOCKET.close();
 					System.out.println("Socket closed?");
 				} catch (Exception ignored) { }
-			}
+			}*/
 		}
 	}
 
@@ -209,6 +213,13 @@ public class BukkitHelper extends BungeeHelper {
 			ProxyServer.getInstance().registerChannel(NIFTY_CHANNEL);
 			this.playerListener = new PlayerListener();
 			MinecraftScheduler.schedule(threadUpdate, 1);
+			MinecraftScheduler.runAsync(new Runnable() {
+				@Override
+				public void run() {
+					if ((System.currentTimeMillis() - lastPing) > 2000 && !hardStopped)
+						startThread();
+				}
+			}, 10000, 2000);
 		}
 	}
 
@@ -238,7 +249,7 @@ public class BukkitHelper extends BungeeHelper {
 				sendServerList(server);
 			}
 
-			startThread();
+			MinecraftScheduler.runAsync(threadUpdate, 1);
 		}
 
 		/**
@@ -259,6 +270,7 @@ public class BukkitHelper extends BungeeHelper {
 
 			for (BungeeInfoServer server : getServers()) {
 				if (server.getPlayerList().size() == 0) continue;
+				getLog().console("PlayerJoin: {0}", profile.getName());
 				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true)));
 			}
 		}
@@ -275,6 +287,7 @@ public class BukkitHelper extends BungeeHelper {
 
 			for (BungeeInfoServer server : getServers()) {
 				if (server.getPlayerList().size() == 0) continue;
+				getLog().console("PlayerLeave: {0}", profile.getName());
 				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", disconnect.getName(), parsePlayerInfo(profile, false)));
 			}
 		}

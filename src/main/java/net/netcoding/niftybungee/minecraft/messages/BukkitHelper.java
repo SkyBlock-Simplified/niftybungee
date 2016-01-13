@@ -12,8 +12,8 @@ import net.netcoding.niftybungee.NiftyBungee;
 import net.netcoding.niftybungee.minecraft.BungeeHelper;
 import net.netcoding.niftybungee.minecraft.BungeeListener;
 import net.netcoding.niftybungee.minecraft.ping.BungeeInfoServer;
+import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.scheduler.MinecraftScheduler;
-import net.netcoding.niftycore.mojang.MojangProfile;
 import net.netcoding.niftycore.util.ByteUtil;
 import net.netcoding.niftycore.util.concurrent.ConcurrentSet;
 import net.netcoding.niftycore.wrappers.ServerSocketWrapper;
@@ -36,7 +36,7 @@ public class BukkitHelper extends BungeeHelper {
 	private static final ConcurrentHashMap<String, BungeeInfoServer> SERVERS = new ConcurrentHashMap<>();
 	private static final ServerSocket SOCKET;
 	private static final ServerSocketWrapper SOCKET_WRAPPER;
-	private PlayerListener playerListener = new PlayerListener();
+	private PlayerListener playerListener;
 	private ConcurrentSet<String> processed = new ConcurrentSet<>();
 	private volatile long lastPing = System.currentTimeMillis();
 	private volatile boolean stopped = false;
@@ -57,21 +57,8 @@ public class BukkitHelper extends BungeeHelper {
 		ServerSocket socket = null;
 
 		try {
-			socket = new ServerSocket(0);
-			socket.setSoTimeout(2000);
-
-			/*Runtime.getRuntime().addShutdownHook(new Thread() {
-				@Override
-				public void run() {
-					try {
-						PrintWriter pw = new PrintWriter(NiftyBungee.getPlugin().getDataFolder().getAbsolutePath() + "/test.txt", "UTF-8");
-						pw.println("Shutdown hook called");
-						pw.println("Socket open: " + (getSocketWrapper().isSocketListening()));
-						pw.close();
-					} catch (Exception ignored) { }
-					System.out.println("Shutdown hook called");
-				}
-			});*/
+			//socket = new ServerSocket(0);
+			//socket.setSoTimeout(2000);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -113,7 +100,7 @@ public class BukkitHelper extends BungeeHelper {
 		return json.toString();
 	}
 
-	public static String parsePlayerInfo(MojangProfile profile, boolean address) {
+	public static String parsePlayerInfo(BungeeMojangProfile profile, boolean address) {
 		JsonObject json = new JsonObject();
 		json.addProperty("id", profile.getUniqueId().toString());
 		json.addProperty("name", profile.getName());
@@ -261,9 +248,8 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onServerSwitch(ServerSwitchEvent event) {
-			final ServerInfo connected = event.getPlayer().getServer().getInfo();
-			MojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
-			BungeeInfoServer bungeeServer = NiftyBungee.getBukkitHelper().getServer(connected);
+			final BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
+			final BungeeInfoServer bungeeServer = profile.getServer();
 
 			if (bungeeServer.getPlayerList().size() == 1) {
 				bungeeServer.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("BungeeInfo", ProxyServer.getInstance().getConfig().isOnlineMode()));
@@ -272,7 +258,6 @@ public class BukkitHelper extends BungeeHelper {
 
 			for (BungeeInfoServer server : getServers()) {
 				if (server.getPlayerList().size() == 0) continue;
-				getLog().console("PlayerJoin: {0}", profile.getName(), bungeeServer.getName());
 				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true)));
 			}
 		}
@@ -284,13 +269,13 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onServerDisconnect(ServerDisconnectEvent event) {
-			final ServerInfo disconnect = event.getTarget();
-			MojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
+			if (hardStopped) return;
+			final BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
+			final BungeeInfoServer bungeeServer = NiftyBungee.getBukkitHelper().getServer(event.getTarget());
 
 			for (BungeeInfoServer server : getServers()) {
 				if (server.getPlayerList().size() == 0) continue;
-				getLog().console("PlayerLeave: {0}", profile.getName(), server.getName());
-				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", disconnect.getName(), parsePlayerInfo(profile, false)));
+				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", bungeeServer.getName(), parsePlayerInfo(profile, false)));
 			}
 		}
 

@@ -60,10 +60,7 @@ public class BungeeInfoServer extends BukkitInfoServer {
 				public void done(ServerPing result, Throwable error) {
 					reset();
 
-					if (error != null) {
-						if (getName().equalsIgnoreCase("pixelmon") && getAddress().getAddress().getHostAddress().equals("192.99.45.103"))
-							System.out.println(StringUtil.format("Unable to ping {0}: {1}", getName(), error.getMessage()));
-					} else {
+					if (error == null) {
 						// Process Socket Registration
 						if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
 							String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];

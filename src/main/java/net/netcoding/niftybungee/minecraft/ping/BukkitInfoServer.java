@@ -6,7 +6,6 @@ import net.netcoding.niftybungee.minecraft.messages.BukkitHelper;
 import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.ping.BukkitServer;
 import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
-import net.netcoding.niftycore.mojang.MojangProfile;
 import net.netcoding.niftycore.util.ByteUtil;
 
 import java.util.ArrayList;
@@ -61,7 +60,7 @@ public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 			objs.add(this.getMaxPlayers());
 			objs.add(this.getPlayerList().size());
 
-			for (MojangProfile profile : this.getPlayerList())
+			for (BungeeMojangProfile profile : this.getPlayerList())
 				objs.add(BukkitHelper.parsePlayerInfo(profile, true));
 		}
 

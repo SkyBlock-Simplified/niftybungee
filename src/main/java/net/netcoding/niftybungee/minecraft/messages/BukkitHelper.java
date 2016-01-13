@@ -216,8 +216,10 @@ public class BukkitHelper extends BungeeHelper {
 			MinecraftScheduler.runAsync(new Runnable() {
 				@Override
 				public void run() {
-					if ((System.currentTimeMillis() - lastPing) > 2000 && !hardStopped)
-						startThread();
+					if ((System.currentTimeMillis() - lastPing) > 2000 && !hardStopped) {
+						stopThread();
+						MinecraftScheduler.runAsync(threadUpdate, 500);
+					}
 				}
 			}, 10000, 2000);
 		}
@@ -270,7 +272,7 @@ public class BukkitHelper extends BungeeHelper {
 
 			for (BungeeInfoServer server : getServers()) {
 				if (server.getPlayerList().size() == 0) continue;
-				getLog().console("PlayerJoin: {0}", profile.getName());
+				getLog().console("PlayerJoin: {0}", profile.getName(), bungeeServer.getName());
 				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true)));
 			}
 		}
@@ -287,7 +289,7 @@ public class BukkitHelper extends BungeeHelper {
 
 			for (BungeeInfoServer server : getServers()) {
 				if (server.getPlayerList().size() == 0) continue;
-				getLog().console("PlayerLeave: {0}", profile.getName());
+				getLog().console("PlayerLeave: {0}", profile.getName(), server.getName());
 				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", disconnect.getName(), parsePlayerInfo(profile, false)));
 			}
 		}

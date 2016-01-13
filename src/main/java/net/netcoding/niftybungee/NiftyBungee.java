@@ -14,8 +14,8 @@ public class NiftyBungee extends BungeePlugin {
 	public void onEnable() {
 		this.getLog().console("Registering Helpers");
 		plugin = this;
-		repository = new BungeeMojangRepository();
 		bukkitHelper = new BukkitHelper(this);
+		repository = new BungeeMojangRepository();
 	}
 
 	@Override

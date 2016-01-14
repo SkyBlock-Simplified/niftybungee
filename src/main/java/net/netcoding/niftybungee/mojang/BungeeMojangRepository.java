@@ -17,6 +17,7 @@ import net.netcoding.niftycore.util.concurrent.ConcurrentList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -102,7 +103,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	 */
 	public BungeeMojangProfile searchByPlayer(ProxiedPlayer player) throws ProfileNotFoundException {
 		try {
-			return this.searchByPlayer(Arrays.asList(player))[0];
+			return this.searchByPlayer(Collections.singletonList(player))[0];
 		} catch (ProfileNotFoundException pnfex) {
 			if (ProfileNotFoundException.Reason.NO_PREMIUM_PLAYER.equals(pnfex.getReason())) {
 				JsonObject json = new JsonObject();

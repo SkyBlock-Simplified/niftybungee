@@ -8,6 +8,8 @@ import net.netcoding.niftycore.mojang.MojangProfile;
 
 public class BungeeMojangProfile extends MojangProfile {
 
+	protected BungeeMojangProfile() { }
+
 	@Override
 	public String getName() {
 		return this.name;

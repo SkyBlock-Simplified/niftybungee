@@ -47,7 +47,7 @@ public abstract class BungeeHelper {
 
 	public final boolean hasPermissions(MojangProfile profile, boolean defaultError, String... permissions) {
 		BungeeMojangProfile bungeeProfile = (BungeeMojangProfile)profile;
-		return bungeeProfile.isOnlineAnywhere() ? this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions) : false;
+		return bungeeProfile.isOnlineAnywhere() && this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions);
 	}
 
 	public final boolean hasPermissions(CommandSender sender, String... permissions) {

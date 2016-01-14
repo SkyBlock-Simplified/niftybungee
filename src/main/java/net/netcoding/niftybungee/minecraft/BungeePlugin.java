@@ -25,7 +25,7 @@ public abstract class BungeePlugin extends Plugin {
 
 	public boolean hasPermissions(MojangProfile profile, boolean defaultError, String... permissions) {
 		BungeeMojangProfile bungeeProfile = (BungeeMojangProfile)profile;
-		return bungeeProfile.isOnlineAnywhere() ? this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions) : false;
+		return bungeeProfile.isOnlineAnywhere() && this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions);
 	}
 
 	public boolean hasPermissions(CommandSender sender, String... permissions) {

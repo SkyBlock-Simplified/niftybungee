@@ -13,7 +13,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.RejectedExecutionException;
 
 public class BungeeInfoServer extends BukkitInfoServer {
 
@@ -54,32 +53,30 @@ public class BungeeInfoServer extends BukkitInfoServer {
 	public void ping() {
 		if (this.getAddress() == null) return;
 
-		try {
-			this.serverInfo.ping(new Callback<ServerPing>() {
-				@Override
-				public void done(ServerPing result, Throwable error) {
-					reset();
+		this.serverInfo.ping(new Callback<ServerPing>() {
+			@Override
+			public void done(ServerPing result, Throwable error) {
+				reset();
 
-					if (error == null) {
-						// Process Socket Registration
-						if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
-							String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];
-							int port = Integer.valueOf(StringUtil.split(" ", niftyPing)[1]);
-							onNiftyPing(port);
-							ping();
-							return;
-						}
-
-						setVersion(result.getVersion().getName(), result.getVersion().getProtocol());
-						setMotd(result.getDescription());
-						setMaxPlayers(result.getPlayers().getMax());
-						setOnline(true);
+				if (error == null) {
+					// Process Socket Registration
+					if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
+						String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];
+						int port = Integer.valueOf(StringUtil.split(" ", niftyPing)[1]);
+						onNiftyPing(port);
+						ping();
+						return;
 					}
 
-					onPing();
+					setVersion(result.getVersion().getName(), result.getVersion().getProtocol());
+					setMotd(result.getDescription());
+					setMaxPlayers(result.getPlayers().getMax());
+					setOnline(true);
 				}
-			});
-		} catch (RejectedExecutionException ignore) { }
+
+				onPing();
+			}
+		});
 	}
 
 	@Override

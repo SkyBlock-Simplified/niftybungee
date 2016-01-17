@@ -144,6 +144,11 @@ public class BukkitHelper extends BungeeHelper {
 
 	private void startThread() {
 		if (!this.hardStopped) {
+			while (NiftyBungee.getBukkitHelper() == null) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException ignore) { }
+			}
 			final Collection<BungeeInfoServer> servers = NiftyBungee.getBukkitHelper().getServers();
 			long delay = 20;
 

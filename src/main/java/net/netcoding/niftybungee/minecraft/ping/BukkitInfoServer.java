@@ -66,7 +66,7 @@ public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 
 		byte[] data = ByteUtil.toByteArray(objs);
 
-		for (BungeeInfoServer target : NiftyBungee.getBukkitHelper().getServers())
+		for (BukkitInfoServer target : NiftyBungee.getBukkitHelper().getServers())
 			target.sendData(BukkitHelper.NIFTY_CHANNEL, data);
 
 		if (this.runnable != null)

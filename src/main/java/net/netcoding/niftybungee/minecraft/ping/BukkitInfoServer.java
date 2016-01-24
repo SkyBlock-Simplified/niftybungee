@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
@@ -43,7 +42,7 @@ public class BukkitInfoServer extends BukkitServer<BungeeMojangProfile> {
 	@Override
 	public Collection<BungeeMojangProfile> getPlayerList() {
 		BungeeMojangProfile[] profiles = NiftyBungee.getMojangRepository().searchByPlayer(this.serverInfo.getPlayers());
-		return Collections.unmodifiableCollection(new HashSet<>(Arrays.asList(profiles)));
+		return Collections.unmodifiableCollection(Arrays.asList(profiles));
 	}
 
 	@Override

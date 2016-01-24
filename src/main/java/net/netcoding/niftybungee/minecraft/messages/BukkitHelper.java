@@ -42,6 +42,7 @@ public class BukkitHelper extends BungeeHelper {
 	private volatile boolean stopped = false;
 	private boolean hardStopped = false;
 	private long startTime = 0;
+	private long delay = 50;
 	private final Runnable threadUpdate = new Runnable() {
 		@Override
 		public void run() {
@@ -57,12 +58,12 @@ public class BukkitHelper extends BungeeHelper {
 
 		ServerSocket socket = null;
 
-		try {
-			//socket = new ServerSocket(0);
-			//socket.setSoTimeout(2000);
+		/*try {
+			socket = new ServerSocket(0);
+			socket.setSoTimeout(2000);
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		}
+		}*/
 
 		SOCKET_WRAPPER = new ServerSocketWrapper(SOCKET = socket);
 	}
@@ -124,10 +125,10 @@ public class BukkitHelper extends BungeeHelper {
 				public void run() {
 					if ((System.currentTimeMillis() - lastPing) > 2000 && !hardStopped) {
 						stopThread(false);
-						MinecraftScheduler.schedule(threadUpdate, 1000);
+						MinecraftScheduler.schedule(threadUpdate, 250);
 					}
 				}
-			}, 10000, 1000);
+			}, 10000, 250);
 		}
 	}
 
@@ -150,49 +151,37 @@ public class BukkitHelper extends BungeeHelper {
 				} catch (InterruptedException ignore) { }
 			}
 			final Collection<BungeeInfoServer> servers = NiftyBungee.getBukkitHelper().getServers();
-			long delay = 20;
 
-			if (processed.size() == servers.size()) {
-				delay = System.currentTimeMillis() - startTime;
-				long compare = delay + (servers.size() * 5);
-
-				if (compare < 500)
-					delay = 500 - compare;
-
-				if (delay < 0)
-					delay = 20;
-			}
+			if (processed.size() == servers.size())
+				this.delay = System.currentTimeMillis() - this.startTime;
 
 			MinecraftScheduler.runAsync(new Runnable() {
 				@Override
 				public void run() {
 					if (servers.size() > 0) {
+						if (stopped)
+							return;
+
 						Iterator<BungeeInfoServer> iterator = servers.iterator();
 						BungeeInfoServer server = null;
+
+						if (processed.size() == servers.size())
+							processed.clear();
+
+						if (processed.size() == 0)
+							startTime = System.currentTimeMillis();
 
 						while (iterator.hasNext()) {
 							if (!processed.contains((server = iterator.next()).getName()))
 								break;
 						}
 
-						if (processed.size() == servers.size()) {
-							processed.clear();
-							server = servers.iterator().next();
-						}
-
-						if (processed.size() == 0)
-							startTime = System.currentTimeMillis();
-
 						processed.add(server.getName());
-
-						if (stopped)
-							return;
-
 						server.setRunnable(threadUpdate);
 						server.ping();
 					}
 				}
-			}, delay);
+			}, this.delay);
 		}
 	}
 
@@ -236,6 +225,7 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onProxyReload(ProxyReloadEvent event) {
+			if (hardStopped) return;
 			stopThread(false);
 
 			for (BungeeInfoServer server : getServers()) {
@@ -254,6 +244,7 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onServerSwitch(ServerSwitchEvent event) {
+			if (hardStopped) return;
 			final BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
 			final BungeeInfoServer bungeeServer = profile.getServer();
 
@@ -263,8 +254,8 @@ public class BukkitHelper extends BungeeHelper {
 			}
 
 			for (BungeeInfoServer server : getServers()) {
-				if (server.getPlayerList().size() == 0) continue;
-				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true)));
+				if (server.getPlayerList().size() > 0)
+					server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true)));
 			}
 		}
 
@@ -280,8 +271,8 @@ public class BukkitHelper extends BungeeHelper {
 			final BungeeInfoServer bungeeServer = NiftyBungee.getBukkitHelper().getServer(event.getTarget());
 
 			for (final BungeeInfoServer server : getServers()) {
-				if (server.getPlayerList().size() == 0) continue;
-				server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", bungeeServer.getName(), parsePlayerInfo(profile, false)));
+				if (server.getPlayerList().size() > 0)
+					server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", bungeeServer.getName(), parsePlayerInfo(profile, false)));
 			}
 		}
 

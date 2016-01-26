@@ -38,16 +38,14 @@ public class BukkitHelper extends BungeeHelper {
 	private static final ServerSocketWrapper SOCKET_WRAPPER;
 	private PlayerListener playerListener;
 	private ConcurrentSet<String> processed = new ConcurrentSet<>();
-	private volatile long lastPing = System.currentTimeMillis();
 	private volatile boolean stopped = false;
 	private boolean hardStopped = false;
+	private int pingTaskId = -1;
 	private long startTime = 0;
 	private long delay = 100;
 	private final Runnable threadUpdate = new Runnable() {
 		@Override
 		public void run() {
-			lastPing = System.currentTimeMillis();
-			stopped = false;
 			startThread();
 		}
 	};
@@ -119,16 +117,7 @@ public class BukkitHelper extends BungeeHelper {
 		if (!ProxyServer.getInstance().getChannels().contains(NIFTY_CHANNEL)) {
 			ProxyServer.getInstance().registerChannel(NIFTY_CHANNEL);
 			this.playerListener = new PlayerListener();
-			MinecraftScheduler.schedule(threadUpdate, 1);
-			MinecraftScheduler.runAsync(new Runnable() {
-				@Override
-				public void run() {
-					if ((System.currentTimeMillis() - lastPing) > 2000 && !hardStopped) {
-						stopThread(false);
-						MinecraftScheduler.schedule(threadUpdate, 250);
-					}
-				}
-			}, 10000, 250);
+			this.startThread();
 		}
 	}
 
@@ -144,32 +133,29 @@ public class BukkitHelper extends BungeeHelper {
 	}
 
 	private void startThread() {
-		if (!this.hardStopped) {
-			while (NiftyBungee.getBukkitHelper() == null) {
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException ignore) { }
+		this.startThread(!this.stopped);
+	}
+
+	private void startThread(boolean bypassStop) {
+		if (!this.hardStopped && bypassStop) {
+			this.stopped = false;
+			final Collection<BungeeInfoServer> servers = getServers();
+
+			if (processed.size() == servers.size()) {
+				long delay = (System.currentTimeMillis() - this.startTime - (this.delay * servers.size()));
+				this.delay = Math.max(delay, 100L) + Math.min(delay, 100L);
+				this.processed.clear();
 			}
-			final Collection<BungeeInfoServer> servers = NiftyBungee.getBukkitHelper().getServers();
 
-			if (processed.size() == servers.size())
-				this.delay = Math.max(100, (System.currentTimeMillis() - this.startTime));
+			if (processed.size() == 0)
+				this.startTime = System.currentTimeMillis();
 
-			MinecraftScheduler.runAsync(new Runnable() {
+			this.pingTaskId = MinecraftScheduler.runAsync(new Runnable() {
 				@Override
 				public void run() {
 					if (servers.size() > 0) {
-						if (stopped)
-							return;
-
 						Iterator<BungeeInfoServer> iterator = servers.iterator();
 						BungeeInfoServer server = null;
-
-						if (processed.size() == servers.size())
-							processed.clear();
-
-						if (processed.size() == 0)
-							startTime = System.currentTimeMillis();
 
 						while (iterator.hasNext()) {
 							if (!processed.contains((server = iterator.next()).getName()))
@@ -181,7 +167,7 @@ public class BukkitHelper extends BungeeHelper {
 						server.ping();
 					}
 				}
-			}, this.delay);
+			}, this.delay).getId();
 		}
 	}
 
@@ -196,6 +182,12 @@ public class BukkitHelper extends BungeeHelper {
 		if (!this.stopped) {
 			this.stopped = true;
 			this.hardStopped = hard;
+
+			if (this.pingTaskId > 0) {
+				try {
+					MinecraftScheduler.cancel(this.pingTaskId);
+				} catch (Exception ignore) { }
+			}
 
 			/*if (this.hardStopped && getSocketWrapper().isSocketListening()) {
 				try {
@@ -235,7 +227,7 @@ public class BukkitHelper extends BungeeHelper {
 					}
 				}
 
-				MinecraftScheduler.runAsync(threadUpdate, 1);
+				startThread(true);
 			}
 		}
 

@@ -117,7 +117,7 @@ public class BukkitHelper extends BungeeHelper {
 		if (!ProxyServer.getInstance().getChannels().contains(NIFTY_CHANNEL)) {
 			ProxyServer.getInstance().registerChannel(NIFTY_CHANNEL);
 			this.playerListener = new PlayerListener();
-			this.startThread();
+			MinecraftScheduler.runAsync(threadUpdate);
 		}
 	}
 
@@ -144,6 +144,12 @@ public class BukkitHelper extends BungeeHelper {
 			if (processed.size() == servers.size()) {
 				long delay = (System.currentTimeMillis() - this.startTime - (this.delay * servers.size()));
 				this.delay = Math.max(delay, 100L) + Math.min(delay, 100L);
+
+				if (this.delay > 500L) {
+					System.out.println("POSSIBLE ERROR: " + this.delay);
+					this.delay = 100L;
+				}
+
 				this.processed.clear();
 			}
 

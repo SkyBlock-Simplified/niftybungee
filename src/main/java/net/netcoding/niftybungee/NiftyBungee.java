@@ -21,7 +21,6 @@ public class NiftyBungee extends BungeePlugin {
 	@Override
 	public void onDisable() {
 		bukkitHelper.unregister();
-		bukkitHelper.stopThread();
 	}
 
 	public static BukkitHelper getBukkitHelper() {

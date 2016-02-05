@@ -33,7 +33,7 @@ public abstract class BungeeHelper {
 		return plugin.cast(this.getPlugin());
 	}
 
-	public final static ConcurrentList<String> getPluginCache() {
+	public static ConcurrentList<String> getPluginCache() {
 		return PLUGINS;
 	}
 

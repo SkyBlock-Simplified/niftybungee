@@ -105,7 +105,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		try {
 			return this.searchByPlayer(Collections.singletonList(player))[0];
 		} catch (ProfileNotFoundException pnfex) {
-			if (ProfileNotFoundException.Reason.NO_PREMIUM_PLAYER.equals(pnfex.getReason())) {
+			if (ProfileNotFoundException.Reason.NO_PREMIUM_PLAYER == pnfex.getReason()) {
 				JsonObject json = new JsonObject();
 				json.addProperty("id", player.getUniqueId().toString());
 				json.addProperty("name", player.getName());

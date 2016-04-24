@@ -34,7 +34,7 @@ public class BungeeLogger extends MinecraftLogger {
 		if (exception != null)
 			this.console(exception);
 
-		ProxyServer.getInstance().broadcast(ComponentSerializer.parse(new JsonMessage(message).toJSONString()));
+		ProxyServer.getInstance().broadcast(ComponentSerializer.parse(new JsonMessage(this.parse(message, args)).toJSONString()));
 	}
 
 	public void error(CommandSender sender, Object... args) {

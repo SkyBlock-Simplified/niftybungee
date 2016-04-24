@@ -1,27 +1,40 @@
 package net.netcoding.niftybungee.minecraft;
 
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.api.plugin.PluginDescription;
+import net.md_5.bungee.chat.ComponentSerializer;
+import net.netcoding.niftycore.minecraft.MinecraftLogger;
+import net.netcoding.niftycore.util.RegexUtil;
+import net.netcoding.niftycore.util.StringUtil;
+import net.netcoding.niftycore.util.json.JsonMessage;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.introspector.PropertyUtils;
+
 import java.io.InputStream;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginDescription;
-import net.netcoding.niftycore.minecraft.MinecraftLogger;
-import net.netcoding.niftycore.util.StringUtil;
-
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.introspector.PropertyUtils;
-
 public class BungeeLogger extends MinecraftLogger {
 
 	public BungeeLogger(Plugin plugin) {
 		super(new BungeePluginLogger(plugin));
+	}
+
+	@Override
+	public void broadcast(String message, Throwable exception, Object... args) {
+		message = StringUtil.isEmpty(message) ? "null" : message;
+		message = StringUtil.format(RegexUtil.replace(message, RegexUtil.LOG_PATTERN), args);
+
+		if (exception != null)
+			this.console(exception);
+
+		ProxyServer.getInstance().broadcast(ComponentSerializer.parse(new JsonMessage(message).toJSONString()));
 	}
 
 	public void error(CommandSender sender, Object... args) {
@@ -93,7 +106,7 @@ public class BungeeLogger extends MinecraftLogger {
 			logRecord.setMessage(this.pluginName + logRecord.getMessage());
 			super.log(logRecord);
 		}
-		
+
 	}
 
 }

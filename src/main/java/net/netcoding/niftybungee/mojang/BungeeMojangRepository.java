@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile> {
+public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile, ProxiedPlayer> {
 
 	static {
 		new RepositoryListener();
@@ -101,6 +101,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	 * @return Profile associated with the given player.
 	 * @throws ProfileNotFoundException If unable to locate the players profile.
 	 */
+	@Override
 	public BungeeMojangProfile searchByPlayer(ProxiedPlayer player) throws ProfileNotFoundException {
 		try {
 			return this.searchByPlayer(Collections.singletonList(player))[0];
@@ -123,6 +124,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	 * @return Profiles associated with the list of players.
 	 * @throws ProfileNotFoundException If unable to locate any players profile.
 	 */
+	@Override
 	public BungeeMojangProfile[] searchByPlayer(ProxiedPlayer[] players) throws ProfileNotFoundException {
 		return this.searchByPlayer(Arrays.asList(players));
 	}
@@ -134,6 +136,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	 * @return Profiles associated with the list of players.
 	 * @throws ProfileNotFoundException If unable to locate any players profile.
 	 */
+	@Override
 	public BungeeMojangProfile[] searchByPlayer(Collection<? extends ProxiedPlayer> players) throws ProfileNotFoundException {
 		final ProfileNotFoundException.LookupType type = ProfileNotFoundException.LookupType.OFFLINE_PLAYERS;
 		List<BungeeMojangProfile> profiles = new ArrayList<>();

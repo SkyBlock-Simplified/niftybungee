@@ -15,8 +15,8 @@ import net.netcoding.niftybungee.minecraft.ping.BungeeInfoServer;
 import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.scheduler.MinecraftScheduler;
 import net.netcoding.niftycore.util.ByteUtil;
+import net.netcoding.niftycore.util.ServerSocketWrapper;
 import net.netcoding.niftycore.util.concurrent.ConcurrentSet;
-import net.netcoding.niftycore.wrappers.ServerSocketWrapper;
 
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -30,22 +30,23 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class BukkitHelper extends BungeeHelper {
 
-	// https://status.mojang.com/check
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
 	private static final ConcurrentHashMap<String, BungeeInfoServer> SERVERS = new ConcurrentHashMap<>();
-	private static final ServerSocket SOCKET;
 	private static final ServerSocketWrapper SOCKET_WRAPPER;
+	private final ConcurrentSet<String> processed = new ConcurrentSet<>();
 	private PlayerListener playerListener;
-	private ConcurrentSet<String> processed = new ConcurrentSet<>();
 	private volatile boolean stopped = false;
-	private boolean hardStopped = false;
-	private int pingTaskId = -1;
+	private volatile long lastPing = System.currentTimeMillis();
+	private volatile int pingTaskId = -1;
+	private int rebootTaskId = -1;
 	private long startTime = 0;
-	private long delay = 100;
+	private final long defaultDelay = 100L;
+	private long delay = defaultDelay;
 	private final Runnable threadUpdate = new Runnable() {
 		@Override
 		public void run() {
+			lastPing = System.currentTimeMillis();
 			startThread();
 		}
 	};
@@ -63,7 +64,7 @@ public class BukkitHelper extends BungeeHelper {
 			ex.printStackTrace();
 		}*/
 
-		SOCKET_WRAPPER = new ServerSocketWrapper(SOCKET = socket);
+		SOCKET_WRAPPER = new ServerSocketWrapper(socket);
 	}
 
 	public BukkitHelper(Plugin plugin) {
@@ -107,7 +108,19 @@ public class BukkitHelper extends BungeeHelper {
 
 		if (address) {
 			json.addProperty("ip", profile.getAddress().getAddress().getHostAddress());
-			json.addProperty("port", profile.getAddress().getPort());
+			int port = 0;
+
+			try {
+				port = profile.getAddress().getPort();
+			} catch (Exception ex) {
+				try {
+					System.out.println(profile.getAddress().toString());
+				} catch (Exception ex2) {
+					System.out.println("Uhh, " + profile.getName() + " lost its address!");
+				}
+			}
+
+			json.addProperty("port", port);
 		}
 
 		return json.toString();
@@ -117,7 +130,21 @@ public class BukkitHelper extends BungeeHelper {
 		if (!ProxyServer.getInstance().getChannels().contains(NIFTY_CHANNEL)) {
 			ProxyServer.getInstance().registerChannel(NIFTY_CHANNEL);
 			this.playerListener = new PlayerListener();
-			MinecraftScheduler.runAsync(threadUpdate);
+			this.pingTaskId = MinecraftScheduler.runAsync(threadUpdate).getId();
+			this.rebootTaskId = MinecraftScheduler.runAsync(new Runnable() {
+				@Override
+				public void run() {
+					long current = System.currentTimeMillis();
+
+					if ((current - lastPing) > 500L) {
+						lastPing = current;
+						processed.clear();
+						stopThread();
+						stopped = false;
+						startThread();
+					}
+				}
+			}, 1000L, this.defaultDelay).getId();
 		}
 	}
 
@@ -133,23 +160,17 @@ public class BukkitHelper extends BungeeHelper {
 	}
 
 	private void startThread() {
-		this.startThread(!this.stopped);
-	}
-
-	private void startThread(boolean bypassStop) {
-		if (!this.hardStopped && bypassStop) {
-			this.stopped = false;
+		if (!this.stopped) {
 			final Collection<BungeeInfoServer> servers = getServers();
 
+			if (servers.isEmpty()) {
+				this.stopThread();
+				return;
+			}
+
 			if (processed.size() == servers.size()) {
-				long delay = (System.currentTimeMillis() - this.startTime - (this.delay * servers.size()));
-				this.delay = Math.max(delay, 100L) + Math.min(delay, 100L);
-
-				if (this.delay > 500L) {
-					System.out.println("POSSIBLE ERROR: " + this.delay);
-					this.delay = 100L;
-				}
-
+				long delay = ((System.currentTimeMillis() - this.startTime) + (this.defaultDelay * servers.size())) / servers.size();
+				this.delay = Math.max(50L, Math.min(250L, delay));
 				this.processed.clear();
 			}
 
@@ -164,12 +185,12 @@ public class BukkitHelper extends BungeeHelper {
 						BungeeInfoServer server = null;
 
 						while (iterator.hasNext()) {
-							if (!processed.contains((server = iterator.next()).getName()))
+							if (!BukkitHelper.this.processed.contains((server = iterator.next()).getName()))
 								break;
 						}
 
-						processed.add(server.getName());
-						server.setRunnable(threadUpdate);
+						BukkitHelper.this.processed.add(server.getName()); // ConcurrentModificationException ?? ConcurrentSet 44
+						server.setRunnable(BukkitHelper.this.threadUpdate);
 						server.ping();
 					}
 				}
@@ -177,31 +198,15 @@ public class BukkitHelper extends BungeeHelper {
 		}
 	}
 
-	public void stopThread() {
-		stopThread(true);
-	}
-
-	private void stopThread(boolean hard) {
-		if (this.hardStopped)
-			return;
-
+	private void stopThread() {
 		if (!this.stopped) {
 			this.stopped = true;
-			this.hardStopped = hard;
 
 			if (this.pingTaskId > 0) {
 				try {
 					MinecraftScheduler.cancel(this.pingTaskId);
 				} catch (Exception ignore) { }
 			}
-
-			/*if (this.hardStopped && getSocketWrapper().isSocketListening()) {
-				try {
-					System.out.println("Closing socket?");
-					SOCKET.close();
-					System.out.println("Socket closed?");
-				} catch (Exception ignored) { }
-			}*/
 		}
 	}
 
@@ -209,6 +214,22 @@ public class BukkitHelper extends BungeeHelper {
 		if (ProxyServer.getInstance().getChannels().contains(NIFTY_CHANNEL)) {
 			ProxyServer.getInstance().unregisterChannel(NIFTY_CHANNEL);
 			ProxyServer.getInstance().getPluginManager().unregisterListener(this.playerListener);
+
+			if (this.pingTaskId > 0) {
+				try {
+					MinecraftScheduler.cancel(this.rebootTaskId);
+				} catch (Exception ignore) { }
+			}
+
+			this.stopThread();
+
+			/*if (getSocketWrapper().isSocketListening()) {
+				try {
+					System.out.println("Closing socket?");
+					SOCKET.close();
+					System.out.println("Socket closed?");
+				} catch (Exception ignored) { }
+			}*/
 		}
 	}
 
@@ -223,8 +244,8 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onProxyReload(ProxyReloadEvent event) {
-			if (!hardStopped) {
-				stopThread(false);
+			if (!BukkitHelper.this.stopped) {
+				stopThread();
 
 				for (BungeeInfoServer server : getServers()) {
 					if (!server.getPlayerList().isEmpty()) {
@@ -233,7 +254,8 @@ public class BukkitHelper extends BungeeHelper {
 					}
 				}
 
-				startThread(true);
+				BukkitHelper.this.stopped = false;
+				startThread();
 			}
 		}
 
@@ -244,7 +266,7 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onServerSwitch(ServerSwitchEvent event) {
-			if (!hardStopped) {
+			if (!BukkitHelper.this.stopped) {
 				BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
 				BungeeInfoServer bungeeServer = profile.getServer();
 
@@ -267,7 +289,7 @@ public class BukkitHelper extends BungeeHelper {
 		 */
 		@EventHandler
 		public void onServerDisconnect(ServerDisconnectEvent event) {
-			if (!hardStopped) {
+			if (!BukkitHelper.this.stopped) {
 				BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
 				BungeeInfoServer bungeeServer = getServer(event.getTarget());
 

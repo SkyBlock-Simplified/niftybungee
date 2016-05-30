@@ -16,6 +16,7 @@ import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
 import net.netcoding.niftycore.minecraft.scheduler.MinecraftScheduler;
 import net.netcoding.niftycore.util.ByteUtil;
 import net.netcoding.niftycore.util.ServerSocketWrapper;
+import net.netcoding.niftycore.util.concurrent.ConcurrentMap;
 import net.netcoding.niftycore.util.concurrent.ConcurrentSet;
 
 import java.net.ServerSocket;
@@ -26,13 +27,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class BukkitHelper extends BungeeHelper {
 
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
-	private static final ConcurrentHashMap<String, BungeeInfoServer> SERVERS = new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, BungeeInfoServer> SERVERS = new ConcurrentMap<>();
 	private static final ServerSocketWrapper SOCKET_WRAPPER;
 	private final ConcurrentSet<String> processed = new ConcurrentSet<>();
 	private PlayerListener playerListener;

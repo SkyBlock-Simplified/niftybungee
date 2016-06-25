@@ -1,26 +1,24 @@
-package net.netcoding.niftybungee.minecraft.ping;
+package net.netcoding.nifty.bungee.api.ping;
 
-import net.md_5.bungee.api.Callback;
-import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.config.ServerInfo;
-import net.netcoding.niftybungee.NiftyBungee;
-import net.netcoding.niftybungee.minecraft.messages.BukkitHelper;
-import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
-import net.netcoding.niftycore.minecraft.ping.MinecraftPingListener;
-import net.netcoding.niftycore.util.StringUtil;
+import net.netcoding.nifty.bungee.NiftyBungee;
+import net.netcoding.nifty.bungee.api.plugin.messaging.BukkitHelper;
+import net.netcoding.nifty.bungee.mojang.BungeeMojangProfile;
+import net.netcoding.nifty.core.api.ping.MinecraftPingListener;
+import net.netcoding.nifty.core.util.StringUtil;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class BungeeInfoServer extends BukkitInfoServer {
+public class BungeeInfoPingServer extends MinecraftInfoPingServer {
 
 	private static final String NIFTY_PING = "NiftyPing";
 	private String socketIp = null;
 	private int socketPort = -1;
 
-	public BungeeInfoServer(ServerInfo serverInfo, MinecraftPingListener<BungeeMojangProfile> listener) {
+	public BungeeInfoPingServer(ServerInfo serverInfo, MinecraftPingListener<BungeeMojangProfile> listener) {
 		super(serverInfo, listener);
 	}
 
@@ -53,29 +51,26 @@ public class BungeeInfoServer extends BukkitInfoServer {
 	public void ping() {
 		if (this.getAddress() == null) return;
 
-		this.serverInfo.ping(new Callback<ServerPing>() {
-			@Override
-			public void done(ServerPing result, Throwable error) {
-				reset();
+		this.serverInfo.ping((result, error) -> {
+			reset();
 
-				if (error == null) {
-					// Process Socket Registration
-					if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
-						String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];
-						int port = Integer.valueOf(StringUtil.split(" ", niftyPing)[1]);
-						onNiftyPing(port);
-						ping();
-						return;
-					}
-
-					setVersion(result.getVersion().getName(), result.getVersion().getProtocol());
-					setMotd(result.getDescription());
-					setMaxPlayers(result.getPlayers().getMax());
-					setOnline(true);
+			if (error == null) {
+				// Process Socket Registration
+				if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
+					String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];
+					int port = Integer.valueOf(StringUtil.split(" ", niftyPing)[1]);
+					onNiftyPing(port);
+					ping();
+					return;
 				}
 
-				onPing();
+				setVersion(result.getVersion().getName(), result.getVersion().getProtocol());
+				setMotd(result.getDescription());
+				setMaxPlayers(result.getPlayers().getMax());
+				setOnline(true);
 			}
+
+			onPing();
 		});
 	}
 

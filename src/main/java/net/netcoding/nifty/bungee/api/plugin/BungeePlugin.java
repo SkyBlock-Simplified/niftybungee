@@ -1,13 +1,15 @@
-package net.netcoding.niftybungee.minecraft;
+package net.netcoding.nifty.bungee.api.plugin;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
-import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
-import net.netcoding.niftycore.mojang.MojangProfile;
-import net.netcoding.niftycore.util.StringUtil;
+import net.netcoding.nifty.bungee.api.BungeeLogger;
+import net.netcoding.nifty.bungee.mojang.BungeeMojangProfile;
+import net.netcoding.nifty.core.api.plugin.PluginDescription;
+import net.netcoding.nifty.core.mojang.MojangProfile;
+import net.netcoding.nifty.core.util.StringUtil;
 
-public abstract class BungeePlugin extends Plugin {
+public abstract class BungeePlugin extends Plugin implements net.netcoding.nifty.core.api.plugin.Plugin<BungeeLogger> {
 
 	private final transient BungeeLogger log;
 
@@ -15,24 +17,30 @@ public abstract class BungeePlugin extends Plugin {
 		this.log = new BungeeLogger(this);
 	}
 
-	public BungeeLogger getLog() {
+	@Override
+	public final BungeeLogger getLog() {
 		return this.log;
 	}
 
-	public boolean hasPermissions(MojangProfile profile, String... permissions) {
+	@Override
+	public final PluginDescription getPluginDescription() {
+		return new PluginDescription(this.getDescription().getName(), this.getFile(), this.getDataFolder());
+	}
+
+	public final boolean hasPermissions(MojangProfile profile, String... permissions) {
 		return this.hasPermissions(profile, false, permissions);
 	}
 
-	public boolean hasPermissions(MojangProfile profile, boolean defaultError, String... permissions) {
+	public final boolean hasPermissions(MojangProfile profile, boolean defaultError, String... permissions) {
 		BungeeMojangProfile bungeeProfile = (BungeeMojangProfile)profile;
-		return bungeeProfile.isOnlineAnywhere() && this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions);
+		return bungeeProfile.isOnline() && this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions);
 	}
 
-	public boolean hasPermissions(CommandSender sender, String... permissions) {
+	public final boolean hasPermissions(CommandSender sender, String... permissions) {
 		return this.hasPermissions(sender, false, permissions);
 	}
 
-	public boolean hasPermissions(CommandSender sender, boolean defaultError, String... permissions) {
+	public final boolean hasPermissions(CommandSender sender, boolean defaultError, String... permissions) {
 		if (isConsole(sender)) return true;
 		String permission = StringUtil.format("{0}.{1}", this.getDescription().getName().toLowerCase(), StringUtil.implode(".", permissions));
 		boolean hasPerms = sender.hasPermission(permission);

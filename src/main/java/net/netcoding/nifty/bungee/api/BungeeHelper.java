@@ -1,13 +1,14 @@
-package net.netcoding.niftybungee.minecraft;
+package net.netcoding.nifty.bungee.api;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
-import net.netcoding.niftybungee.mojang.BungeeMojangProfile;
-import net.netcoding.niftycore.mojang.MojangProfile;
-import net.netcoding.niftycore.util.StringUtil;
-import net.netcoding.niftycore.util.concurrent.ConcurrentList;
+import net.netcoding.nifty.bungee.api.plugin.BungeePlugin;
+import net.netcoding.nifty.bungee.mojang.BungeeMojangProfile;
+import net.netcoding.nifty.core.mojang.MojangProfile;
+import net.netcoding.nifty.core.util.StringUtil;
+import net.netcoding.nifty.core.util.concurrent.ConcurrentList;
 
 public abstract class BungeeHelper {
 
@@ -15,7 +16,7 @@ public abstract class BungeeHelper {
 	private final transient Plugin plugin;
 	private final transient BungeeLogger logger;
 
-	public BungeeHelper(Plugin plugin) {
+	public BungeeHelper(BungeePlugin plugin) {
 		this.plugin = plugin;
 		this.logger = new BungeeLogger(plugin);
 		PLUGINS.add(this.getPluginDescription().getName());
@@ -47,7 +48,7 @@ public abstract class BungeeHelper {
 
 	public final boolean hasPermissions(MojangProfile profile, boolean defaultError, String... permissions) {
 		BungeeMojangProfile bungeeProfile = (BungeeMojangProfile)profile;
-		return bungeeProfile.isOnlineAnywhere() && this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions);
+		return bungeeProfile.isOnline() && this.hasPermissions(bungeeProfile.getPlayer(), defaultError, permissions);
 	}
 
 	public final boolean hasPermissions(CommandSender sender, String... permissions) {

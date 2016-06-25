@@ -1,34 +1,29 @@
-package net.netcoding.niftybungee.mojang;
+package net.netcoding.nifty.bungee.mojang;
 
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.chat.ComponentSerializer;
-import net.netcoding.niftybungee.NiftyBungee;
-import net.netcoding.niftybungee.minecraft.ping.BungeeInfoServer;
-import net.netcoding.niftycore.mojang.MojangProfile;
-import net.netcoding.niftycore.util.json.JsonMessage;
+import net.netcoding.nifty.bungee.api.ping.BungeeInfoPingServer;
+import net.netcoding.nifty.bungee.NiftyBungee;
+import net.netcoding.nifty.core.mojang.MojangProfile;
+import net.netcoding.nifty.core.util.json.JsonMessage;
 
 public class BungeeMojangProfile extends MojangProfile {
 
 	protected BungeeMojangProfile() { }
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
 
 	public final ProxiedPlayer getPlayer() {
 		return ProxyServer.getInstance().getPlayer(this.getUniqueId());
 	}
 
 	@Override
-	public BungeeInfoServer getServer() {
+	public BungeeInfoPingServer getServer() {
 		return NiftyBungee.getBukkitHelper().getServer(this.getPlayer().getServer().getInfo());
 	}
 
 	@Override
-	public boolean isOnlineAnywhere() {
+	public boolean isOnline() {
 		return ProxyServer.getInstance().getPlayer(this.getUniqueId()) != null;
 	}
 

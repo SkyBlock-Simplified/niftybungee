@@ -1,4 +1,4 @@
-package net.netcoding.niftybungee.minecraft;
+package net.netcoding.nifty.bungee.api;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -6,10 +6,11 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
 import net.md_5.bungee.chat.ComponentSerializer;
-import net.netcoding.niftycore.minecraft.MinecraftLogger;
-import net.netcoding.niftycore.util.RegexUtil;
-import net.netcoding.niftycore.util.StringUtil;
-import net.netcoding.niftycore.util.json.JsonMessage;
+import net.netcoding.nifty.bungee.api.plugin.BungeePlugin;
+import net.netcoding.nifty.core.api.logger.BroadcastLogger;
+import net.netcoding.nifty.core.util.RegexUtil;
+import net.netcoding.nifty.core.util.StringUtil;
+import net.netcoding.nifty.core.util.json.JsonMessage;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
@@ -20,10 +21,10 @@ import java.util.jar.JarFile;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-public class BungeeLogger extends MinecraftLogger {
+public class BungeeLogger extends BroadcastLogger {
 
-	public BungeeLogger(Plugin plugin) {
-		super(new BungeePluginLogger(plugin));
+	public BungeeLogger(BungeePlugin plugin) {
+		super(plugin);
 	}
 
 	@Override

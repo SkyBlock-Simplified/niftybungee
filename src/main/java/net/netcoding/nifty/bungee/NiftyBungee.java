@@ -1,8 +1,8 @@
-package net.netcoding.niftybungee;
+package net.netcoding.nifty.bungee;
 
-import net.netcoding.niftybungee.minecraft.BungeePlugin;
-import net.netcoding.niftybungee.minecraft.messages.BukkitHelper;
-import net.netcoding.niftybungee.mojang.BungeeMojangRepository;
+import net.netcoding.nifty.bungee.api.plugin.BungeePlugin;
+import net.netcoding.nifty.bungee.api.plugin.messaging.BukkitHelper;
+import net.netcoding.nifty.bungee.mojang.BungeeMojangRepository;
 
 public class NiftyBungee extends BungeePlugin {
 

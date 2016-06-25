@@ -1,4 +1,4 @@
-package net.netcoding.niftybungee.mojang;
+package net.netcoding.nifty.bungee.mojang;
 
 import com.google.gson.JsonObject;
 import net.md_5.bungee.api.ProxyServer;
@@ -6,13 +6,13 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.event.EventHandler;
-import net.netcoding.niftybungee.NiftyBungee;
-import net.netcoding.niftybungee.minecraft.BungeeListener;
-import net.netcoding.niftycore.mojang.MojangProfile;
-import net.netcoding.niftycore.mojang.MojangRepository;
-import net.netcoding.niftycore.mojang.exceptions.ProfileNotFoundException;
-import net.netcoding.niftycore.util.ListUtil;
-import net.netcoding.niftycore.util.concurrent.ConcurrentList;
+import net.netcoding.nifty.bungee.api.BungeeListener;
+import net.netcoding.nifty.bungee.NiftyBungee;
+import net.netcoding.nifty.core.mojang.MojangProfile;
+import net.netcoding.nifty.core.mojang.MojangRepository;
+import net.netcoding.nifty.core.mojang.exceptions.ProfileNotFoundException;
+import net.netcoding.nifty.core.util.ListUtil;
+import net.netcoding.nifty.core.util.concurrent.ConcurrentList;
 
 import java.util.ArrayList;
 import java.util.Arrays;

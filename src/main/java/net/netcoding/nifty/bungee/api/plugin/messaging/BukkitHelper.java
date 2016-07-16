@@ -6,18 +6,19 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.event.ProxyReloadEvent;
 import net.md_5.bungee.api.event.ServerDisconnectEvent;
 import net.md_5.bungee.api.event.ServerSwitchEvent;
-import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 import net.netcoding.nifty.bungee.NiftyBungee;
 import net.netcoding.nifty.bungee.api.BungeeHelper;
 import net.netcoding.nifty.bungee.api.BungeeListener;
 import net.netcoding.nifty.bungee.api.ping.BungeeInfoPingServer;
+import net.netcoding.nifty.bungee.api.plugin.BungeePlugin;
 import net.netcoding.nifty.bungee.mojang.BungeeMojangProfile;
 import net.netcoding.nifty.core.api.scheduler.MinecraftScheduler;
 import net.netcoding.nifty.core.util.ByteUtil;
-import net.netcoding.nifty.core.util.misc.ServerSocketWrapper;
+import net.netcoding.nifty.core.util.concurrent.Concurrent;
 import net.netcoding.nifty.core.util.concurrent.ConcurrentMap;
 import net.netcoding.nifty.core.util.concurrent.ConcurrentSet;
+import net.netcoding.nifty.core.util.misc.ServerSocketWrapper;
 
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -33,9 +34,9 @@ public class BukkitHelper extends BungeeHelper {
 
 	public static final String BUNGEE_CHANNEL = "BungeeCord";
 	public static final String NIFTY_CHANNEL = "NiftyBungee";
-	private static final ConcurrentMap<String, BungeeInfoPingServer> SERVERS = new ConcurrentMap<>();
+	private static final ConcurrentMap<String, BungeeInfoPingServer> SERVERS = Concurrent.newMap();
 	private static final ServerSocketWrapper SOCKET_WRAPPER;
-	private final ConcurrentSet<String> processed = new ConcurrentSet<>();
+	private final ConcurrentSet<String> processed = Concurrent.newSet();
 	private PlayerListener playerListener;
 	private volatile boolean stopped = false;
 	private volatile long lastPing = System.currentTimeMillis();
@@ -45,8 +46,13 @@ public class BukkitHelper extends BungeeHelper {
 	private final long defaultDelay = 100L;
 	private long delay = defaultDelay;
 	private final Runnable threadUpdate = () -> {
-		lastPing = System.currentTimeMillis();
-		startThread();
+		this.lastPing = System.currentTimeMillis();
+
+		try {
+			Thread.sleep(this.delay);
+		} catch (Exception ignore) { }
+
+		this.pingServer();
 	};
 
 	static {
@@ -65,7 +71,7 @@ public class BukkitHelper extends BungeeHelper {
 		SOCKET_WRAPPER = new ServerSocketWrapper(socket);
 	}
 
-	public BukkitHelper(Plugin plugin) {
+	public BukkitHelper(BungeePlugin plugin) {
 		super(plugin);
 		this.register();
 	}
@@ -105,18 +111,15 @@ public class BukkitHelper extends BungeeHelper {
 		json.addProperty("name", profile.getName());
 
 		if (address) {
-			String ip = "";
-			int port = 0;
+			String ip;
+			int port;
 
 			try {
 				ip = profile.getAddress().getAddress().getHostAddress();
 				port = profile.getAddress().getPort();
 			} catch (Exception ex) {
-				try {
-					System.out.println(profile.getAddress().toString());
-				} catch (Exception ex2) {
-					System.out.println("Uhh, " + profile.getName() + " lost its address!: " + profile.getAddress());
-				}
+				ip = "";
+				port = 0;
 			}
 
 			json.addProperty("ip", ip);
@@ -130,16 +133,16 @@ public class BukkitHelper extends BungeeHelper {
 		if (!ProxyServer.getInstance().getChannels().contains(NIFTY_CHANNEL)) {
 			ProxyServer.getInstance().registerChannel(NIFTY_CHANNEL);
 			this.playerListener = new PlayerListener();
-			this.pingTaskId = MinecraftScheduler.getInstance().runAsync(threadUpdate).getId();
+			this.pingTaskId = MinecraftScheduler.getInstance().runAsync(this::pingServer).getId();
 			this.rebootTaskId = MinecraftScheduler.getInstance().runAsync(() -> {
 				long current = System.currentTimeMillis();
 
-				if ((current - lastPing) > 500L) {
-					lastPing = current;
-					processed.clear();
-					stopThread();
-					stopped = false;
-					startThread();
+				if ((current - this.lastPing) > 500L) {
+					this.lastPing = current;
+					this.processed.clear();
+					this.stopThread();
+					this.stopped = false;
+					this.pingServer();
 				}
 			}, 1000L, this.defaultDelay).getId();
 		}
@@ -153,9 +156,9 @@ public class BukkitHelper extends BungeeHelper {
 		server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray(servers));
 	}
 
-	private void startThread() {
+	private void pingServer() {
 		if (!this.stopped) {
-			final Collection<BungeeInfoPingServer> servers = getServers();
+			final Collection<BungeeInfoPingServer> servers = this.getServers();
 
 			if (servers.isEmpty()) {
 				this.stopThread();
@@ -171,21 +174,19 @@ public class BukkitHelper extends BungeeHelper {
 			if (processed.size() == 0)
 				this.startTime = System.currentTimeMillis();
 
-			this.pingTaskId = MinecraftScheduler.getInstance().runAsync(() -> {
-				if (servers.size() > 0) {
-					Iterator<BungeeInfoPingServer> iterator = servers.iterator();
-					BungeeInfoPingServer server = null;
+			if (servers.size() > 0) {
+				Iterator<BungeeInfoPingServer> iterator = servers.iterator();
+				BungeeInfoPingServer server = null;
 
-					while (iterator.hasNext()) {
-						if (!BukkitHelper.this.processed.contains((server = iterator.next()).getName()))
-							break;
-					}
-
-					BukkitHelper.this.processed.add(server.getName()); // ConcurrentModificationException ?? ConcurrentSet 44
-					server.setRunnable(BukkitHelper.this.threadUpdate);
-					server.ping();
+				while (iterator.hasNext()) {
+					if (!this.processed.contains((server = iterator.next()).getName()))
+						break;
 				}
-			}, this.delay).getId();
+
+				this.processed.add(server.getName());
+				server.setRunnable(this.threadUpdate);
+				server.ping();
+			}
 		}
 	}
 
@@ -236,7 +237,7 @@ public class BukkitHelper extends BungeeHelper {
 		@EventHandler
 		public void onProxyReload(ProxyReloadEvent event) {
 			if (!BukkitHelper.this.stopped) {
-				stopThread();
+				BukkitHelper.this.stopThread();
 
 				getServers().stream().filter(server -> !server.getPlayerList().isEmpty()).forEach(server -> {
 					server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("BungeeInfo", ProxyServer.getInstance().getConfig().isOnlineMode()));
@@ -244,7 +245,7 @@ public class BukkitHelper extends BungeeHelper {
 				});
 
 				BukkitHelper.this.stopped = false;
-				startThread();
+				BukkitHelper.this.pingServer();
 			}
 		}
 
@@ -261,10 +262,11 @@ public class BukkitHelper extends BungeeHelper {
 
 				if (bungeeServer.getPlayerList().size() == 1) {
 					bungeeServer.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("BungeeInfo", ProxyServer.getInstance().getConfig().isOnlineMode()));
-					sendServerList(bungeeServer);
+					BukkitHelper.sendServerList(bungeeServer);
 				}
 
-				getServers().stream().filter(server -> !server.getPlayerList().isEmpty()).forEach(server -> server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true))));
+				BukkitHelper.this.getServers().stream().filter(server -> !server.getPlayerList().isEmpty())
+						.forEach(server -> server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerJoin", bungeeServer.getName(), parsePlayerInfo(profile, true))));
 			}
 		}
 
@@ -278,7 +280,8 @@ public class BukkitHelper extends BungeeHelper {
 			if (!BukkitHelper.this.stopped) {
 				BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(event.getPlayer());
 				BungeeInfoPingServer bungeeServer = getServer(event.getTarget());
-				getServers().stream().filter(server -> !server.getPlayerList().isEmpty()).forEach(server -> server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", bungeeServer.getName(), parsePlayerInfo(profile, false))));
+				BukkitHelper.this.getServers().stream().filter(server -> !server.getPlayerList().isEmpty())
+						.forEach(server -> server.sendData(BukkitHelper.NIFTY_CHANNEL, ByteUtil.toByteArray("PlayerLeave", bungeeServer.getName(), parsePlayerInfo(profile, false))));
 			}
 		}
 

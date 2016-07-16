@@ -3,7 +3,9 @@ package net.netcoding.nifty.bungee;
 import net.netcoding.nifty.bungee.api.plugin.BungeePlugin;
 import net.netcoding.nifty.bungee.api.plugin.messaging.BukkitHelper;
 import net.netcoding.nifty.bungee.mojang.BungeeMojangRepository;
+import net.netcoding.nifty.core.api.plugin.annotations.Plugin;
 
+@Plugin(name = "Nifty${name}", version = "${version}")
 public class NiftyBungee extends BungeePlugin {
 
 	private static transient NiftyBungee plugin;

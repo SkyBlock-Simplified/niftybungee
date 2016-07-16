@@ -8,25 +8,24 @@ import net.netcoding.nifty.bungee.api.plugin.BungeePlugin;
 import net.netcoding.nifty.bungee.mojang.BungeeMojangProfile;
 import net.netcoding.nifty.core.mojang.MojangProfile;
 import net.netcoding.nifty.core.util.StringUtil;
+import net.netcoding.nifty.core.util.concurrent.Concurrent;
 import net.netcoding.nifty.core.util.concurrent.ConcurrentList;
 
 public abstract class BungeeHelper {
 
-	private final static transient ConcurrentList<String> PLUGINS = new ConcurrentList<>();
-	private final transient Plugin plugin;
-	private final transient BungeeLogger logger;
+	private static final transient ConcurrentList<String> PLUGINS = Concurrent.newList();
+	private final transient BungeePlugin plugin;
 
 	public BungeeHelper(BungeePlugin plugin) {
 		this.plugin = plugin;
-		this.logger = new BungeeLogger(plugin);
 		PLUGINS.add(this.getPluginDescription().getName());
 	}
 
 	public final BungeeLogger getLog() {
-		return this.logger;
+		return this.getPlugin().getLog();
 	}
 
-	public final Plugin getPlugin() {
+	public final BungeePlugin getPlugin() {
 		return this.plugin;
 	}
 

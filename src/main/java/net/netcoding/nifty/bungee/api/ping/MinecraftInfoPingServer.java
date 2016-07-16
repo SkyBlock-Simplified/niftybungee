@@ -38,9 +38,9 @@ public class MinecraftInfoPingServer extends MinecraftPingServer<BungeeMojangPro
 		List<Object> objs = new ArrayList<>();
 		objs.add("ServerInfo");
 		objs.add(this.getName());
-		objs.add(this.isOnlineMode());
+		objs.add(this.isOnline());
 
-		if (this.isOnlineMode()) {
+		if (this.isOnline()) {
 			objs.add(this.getMotd());
 			objs.add(this.getVersion().getName());
 			objs.add(this.getVersion().getProtocol());

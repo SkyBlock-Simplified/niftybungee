@@ -6,9 +6,8 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerConnectedEvent;
 import net.md_5.bungee.event.EventHandler;
-import net.netcoding.nifty.bungee.api.BungeeListener;
 import net.netcoding.nifty.bungee.NiftyBungee;
-import net.netcoding.nifty.core.mojang.MojangProfile;
+import net.netcoding.nifty.bungee.api.BungeeListener;
 import net.netcoding.nifty.core.mojang.MojangRepository;
 import net.netcoding.nifty.core.mojang.exceptions.ProfileNotFoundException;
 import net.netcoding.nifty.core.util.ListUtil;
@@ -20,6 +19,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile, ProxiedPlayer> {
 
@@ -31,8 +32,19 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		JsonObject json = new JsonObject();
 		json.addProperty("id", player.getUniqueId().toString());
 		json.addProperty("name", player.getName());
-		json.addProperty("ip", player.getAddress().getAddress().getHostAddress());
-		json.addProperty("port", player.getAddress().getPort());
+		String ip;
+		int port;
+
+		try {
+			ip = player.getAddress().getAddress().getHostAddress();
+			port = player.getAddress().getPort();
+		} catch (NullPointerException npex) {
+			ip = "";
+			port = 0;
+		}
+
+		json.addProperty("ip", ip);
+		json.addProperty("port", port);
 		return GSON.fromJson(json.toString(), BungeeMojangProfile.class);
 	}
 
@@ -143,8 +155,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 
 		try {
 			// Create Matching Profiles
-			for (ProxiedPlayer player : players)
-				profiles.add(this.createProfile(player));
+			profiles.addAll(players.stream().map((Function<ProxiedPlayer, BungeeMojangProfile>) this::createProfile).collect(Collectors.toList()));
 
 			return ListUtil.toArray(profiles, BungeeMojangProfile.class);
 		} catch (ProfileNotFoundException pnfex) {
@@ -164,11 +175,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		public void onServerConnected(ServerConnectedEvent event) {
 			ProxiedPlayer player = event.getPlayer();
 			BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(player);
-
-			for (MojangProfile cache : CACHE) {
-				if (cache.equals(profile))
-					CACHE.remove(cache);
-			}
+			CACHE.stream().filter(cache -> cache.equals(profile)).forEach(CACHE::remove);
 		}
 
 	}

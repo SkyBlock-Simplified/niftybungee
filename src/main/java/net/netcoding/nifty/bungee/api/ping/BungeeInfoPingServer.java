@@ -59,18 +59,18 @@ public class BungeeInfoPingServer extends MinecraftInfoPingServer {
 				if (result.getVersion().getName().startsWith(NIFTY_PING) && BukkitHelper.getSocketWrapper().isSocketListening()) {
 					String niftyPing = StringUtil.split(",", result.getVersion().getName())[0];
 					int port = Integer.valueOf(StringUtil.split(" ", niftyPing)[1]);
-					onNiftyPing(port);
-					ping();
+					this.onNiftyPing(port);
+					this.ping();
 					return;
 				}
 
-				setVersion(result.getVersion().getName(), result.getVersion().getProtocol());
-				setMotd(result.getDescription());
-				setMaxPlayers(result.getPlayers().getMax());
-				setOnline(true);
+				this.setVersion(result.getVersion().getName(), result.getVersion().getProtocol());
+				this.setMotd(result.getDescriptionComponent().toLegacyText());
+				this.setMaxPlayers(result.getPlayers().getMax());
+				this.setOnline(true);
 			}
 
-			onPing();
+			this.onPing();
 		});
 	}
 

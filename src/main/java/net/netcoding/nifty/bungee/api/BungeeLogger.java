@@ -13,7 +13,7 @@ import net.netcoding.nifty.core.util.json.JsonMessage;
 public class BungeeLogger extends BroadcastLogger {
 
 	public BungeeLogger(BungeePlugin plugin) {
-		super(plugin);
+		super(plugin.getDesc());
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import net.netcoding.nifty.bungee.NiftyBungee;
 import net.netcoding.nifty.core.mojang.MojangProfile;
 import net.netcoding.nifty.core.util.json.JsonMessage;
 
-public final class BungeeMojangProfile extends MojangProfile {
+public final class BungeeMojangProfile extends MojangProfile<BungeeMojangProfile> {
 
 	public final ProxiedPlayer getPlayer() {
 		return ProxyServer.getInstance().getPlayer(this.getUniqueId());

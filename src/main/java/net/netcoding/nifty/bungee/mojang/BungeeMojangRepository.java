@@ -22,9 +22,9 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile, ProxiedPlayer> {
+public final class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile, ProxiedPlayer> {
 
-	static {
+	public BungeeMojangRepository() {
 		new RepositoryListener();
 	}
 
@@ -49,15 +49,15 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	}
 
 	@Override
-	protected final boolean isOnline() {
+	protected boolean isOnline() {
 		return ProxyServer.getInstance().getConfig().isOnlineMode();
 	}
 
 	@Override
-	protected final void processOfflineUsernames(List<BungeeMojangProfile> profiles, ConcurrentList<String> userList) { }
+	protected void processOfflineUsernames(List<BungeeMojangProfile> profiles, ConcurrentList<String> userList) { }
 
 	@Override
-	protected final void processOnlineUsernames(List<BungeeMojangProfile> profiles, ConcurrentList<String> userList) {
+	protected void processOnlineUsernames(List<BungeeMojangProfile> profiles, ConcurrentList<String> userList) {
 		for (String name : userList) {
 			String criteriaName = name.toLowerCase();
 
@@ -90,12 +90,12 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 	}
 
 	@Override
-	protected final BungeeMojangProfile processOfflineUniqueId(UUID uniqueId) {
+	protected BungeeMojangProfile processOfflineUniqueId(UUID uniqueId) {
 		return null;
 	}
 
 	@Override
-	protected final BungeeMojangProfile processOnlineUniqueId(UUID uniqueId) {
+	protected BungeeMojangProfile processOnlineUniqueId(UUID uniqueId) {
 		for (ServerInfo server : ProxyServer.getInstance().getServers().values()) {
 			for (ProxiedPlayer player : server.getPlayers()) {
 				if (player.getUniqueId().equals(uniqueId))
@@ -106,13 +106,6 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		return null;
 	}
 
-	/**
-	 * Locates the profile for this server associated with the given offline player.
-	 *
-	 * @param player Proxied player to search with.
-	 * @return Profile associated with the given player.
-	 * @throws ProfileNotFoundException If unable to locate the players profile.
-	 */
 	@Override
 	public BungeeMojangProfile searchByPlayer(ProxiedPlayer player) throws ProfileNotFoundException {
 		try {
@@ -129,25 +122,11 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		}
 	}
 
-	/**
-	 * Locates the profiles for this server associated with the given offline players.
-	 *
-	 * @param players Offline players to search with.
-	 * @return Profiles associated with the list of players.
-	 * @throws ProfileNotFoundException If unable to locate any players profile.
-	 */
 	@Override
 	public BungeeMojangProfile[] searchByPlayer(ProxiedPlayer[] players) throws ProfileNotFoundException {
 		return this.searchByPlayer(Arrays.asList(players));
 	}
 
-	/**
-	 * Locates the profiles for this server associated with the given offline players.
-	 *
-	 * @param  players Proxied players to search with.
-	 * @return Profiles associated with the list of players.
-	 * @throws ProfileNotFoundException If unable to locate any players profile.
-	 */
 	@Override
 	public BungeeMojangProfile[] searchByPlayer(Collection<? extends ProxiedPlayer> players) throws ProfileNotFoundException {
 		final ProfileNotFoundException.LookupType type = ProfileNotFoundException.LookupType.OFFLINE_PLAYERS;
@@ -165,7 +144,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		}
 	}
 
-	protected static class RepositoryListener extends BungeeListener {
+	protected class RepositoryListener extends BungeeListener {
 
 		private RepositoryListener() {
 			super(NiftyBungee.getPlugin());
@@ -175,7 +154,7 @@ public class BungeeMojangRepository extends MojangRepository<BungeeMojangProfile
 		public void onServerConnected(ServerConnectedEvent event) {
 			ProxiedPlayer player = event.getPlayer();
 			BungeeMojangProfile profile = NiftyBungee.getMojangRepository().searchByPlayer(player);
-			CACHE.stream().filter(cache -> cache.equals(profile)).forEach(CACHE::remove);
+			cache.stream().filter(cache -> cache.equals(profile)).forEach(cache::remove);
 		}
 
 	}
